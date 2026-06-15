@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DM and HTN Follow up Form - Prototype</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Bahmni Core Variables & Fonts --- */
+        :root {
+            --bahmni-teal: #669999;
+            /* Authentic Bahmni clinical teal */
+            --bahmni-blue: #363463;
+            --bahmni-bg: #f9f9f9;
+            --bahmni-border: #ddd;
+            --bahmni-btn-save: #6ab165;
+            --bahmni-btn-clear: #d8d8d8;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Open Sans', Arial, sans-serif;
+            background-color: var(--bahmni-bg);
+            color: var(--bahmni-blue);
+            font-size: 13px;
+        }
+
+        /* --- Page Shell (Header & Layout) --- */
+        .opd-header-wrapper {
+            background-color: var(--bahmni-teal);
+            color: white;
+            padding: 5px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .header-nav {
+            font-size: 13px;
+            color: #1f85d6;
+            margin: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-nav a {
+            color: #1f85d6;
+            text-decoration: none;
+        }
+
+        .form-title {
+            margin: 0 20px;
+            color: var(--bahmni-blue);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .layout-container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+            padding: 0 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+            background: #fff;
+            border: 1px solid #a0a0a0;
+            margin-top: 10px;
+            padding-bottom: 20px;
+        }
+
+        /* --- Table Layout --- */
+        .table-layout {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-layout td {
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            vertical-align: top;
+        }
+
+        .table-header td {
+            background: #e9e9e9;
+            font-weight: 600;
+            padding: 6px 15px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .table-layout td.label-cell {
+            width: 200px;
+            min-width: 200px;
+            background-color: #f9f9f9;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .table-layout td.input-cell {
+            position: relative;
+        }
+
+        .table-layout td.saved-cell {
+            min-width: 160px;
+            width: 160px;
+            background: #fff;
+            color: #333;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .saved-value {
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+
+        .save-status {
+            color: var(--bahmni-btn-save);
+            font-weight: 600;
+            align-self: center;
+        }
+
+        /* --- Inputs & Textareas --- */
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 200px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            color: #333;
+            font-family: inherit;
+            font-size: 13px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            border-color: #999;
+        }
+
+        textarea {
+            width: 250px;
+            height: 35px;
+            resize: vertical;
+        }
+
+        /* Form Helper Text */
+        .form-hint {
+            display: block;
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* --- Bahmni Buttons --- */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            width: 250px;
+            /* Matched to screenshot */
+        }
+
+        .bahmni-btn {
+            background: linear-gradient(to bottom, #fefefe 0%, #e0e0e0 100%);
+            border: 1px solid #ccc;
+            padding: 5px 15px;
+            font-size: 12px;
+            color: #333;
+            cursor: pointer;
+            text-align: center;
+            border-radius: 2px;
+        }
+
+        .bahmni-btn:hover {
+            background: linear-gradient(to bottom, #f0f0f0 0%, #d0d0d0 100%);
+        }
+
+        .bahmni-btn.selected {
+            background: #d8d8d8;
+            border-color: #999;
+            color: var(--bahmni-teal);
+            font-weight: 600;
+        }
+
+        /* Sub-forms like BMI Calc */
+        .sub-form {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 10px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .sub-form table td {
+            border: none;
+            padding: 3px 5px;
+            vertical-align: middle;
+        }
+
+        .calc-btn {
+            background: linear-gradient(to bottom, #fefefe 0%, #e0e0e0 100%);
+            border: 1px solid #ccc;
+            padding: 4px 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* Add Note Note / Form Extension Icon */
+        .icon-btn {
+            position: absolute;
+            right: 15px;
+            bottom: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-btn::before {
+            content: "📄";
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .icon-btn::after {
+            content: "+";
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            color: green;
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .icon-btn:hover {
+            background: #f5f5f5;
+        }
+
+        #treatment-life-style-btns .risk-linked {
+            display: none;
+        }
+
+        /* Save Buttons */
+        .btn-wrapper {
+            padding: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-save {
+            background-color: var(--bahmni-btn-save);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .add-new-btn {
+            background: linear-gradient(to bottom, #fefefe 0%, #e0e0e0 100%);
+            border: 1px solid #ccc;
+            padding: 4px 15px;
+            float: right;
+            cursor: pointer;
+        }
+
+        /* --- Diagnosis Autocomplete Section --- */
+        .diagnosis-section {
+            background-color: #f5f8f8;
+            /* Soft clinical background */
+            border: 1px solid var(--bahmni-border);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .diagnosis-section h3 {
+            margin-top: 0;
+            color: var(--bahmni-blue);
+            font-size: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .bahmni-autocomplete {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .bahmni-autocomplete label {
+            width: 250px;
+            color: #555;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .autocomplete-wrapper input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            font-size: 13px;
+        }
+
+        .autocomplete-wrapper input:focus {
+            border-color: var(--bahmni-teal);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 153, 153, 0.4);
+            outline: none;
+        }
+
+        .autocomplete-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-top: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .autocomplete-dropdown.active {
+            display: block;
+        }
+
+        .autocomplete-option {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .autocomplete-option:hover {
+            background-color: var(--bahmni-teal);
+            color: white;
+        }
+
+        /* Pill tags for multi-select */
+        .pill-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .pill {
+            background-color: #ebf5ff;
+            border: 1px solid #b3d4fc;
+            color: #0056b3;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pill .remove-pill {
+            color: #0056b3;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .pill .remove-pill:hover {
+            color: #d9534f;
+        }
+
+        .ethiopian-date-field {
+            position: relative;
+            display: inline-block;
+            max-width: 360px;
+        }
+
+        .ethiopian-date-field input[readonly] {
+            width: 235px;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .calendar-trigger {
+            width: 32px;
+            height: 30px;
+            margin-left: 4px;
+            border: 1px solid #ccc;
+            background: linear-gradient(to bottom, #fefefe 0%, #e0e0e0 100%);
+            cursor: pointer;
+            vertical-align: top;
+        }
+
+        .ethiopian-picker {
+            display: none;
+            position: absolute;
+            top: 34px;
+            left: 0;
+            width: 330px;
+            background: #fff;
+            border: 1px solid #bbb;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+            z-index: 2000;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .ethiopian-picker.active {
+            display: block;
+        }
+
+        .ethiopian-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .ethiopian-picker-header button,
+        .ethiopian-picker-day {
+            border: 1px solid #ccc;
+            background: linear-gradient(to bottom, #fefefe 0%, #e0e0e0 100%);
+            cursor: pointer;
+        }
+
+        .ethiopian-picker-title {
+            font-weight: 600;
+            color: var(--bahmni-blue);
+        }
+
+        .ethiopian-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+
+        .ethiopian-picker-weekday {
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+            font-weight: 600;
+            padding: 3px 0;
+        }
+
+        .ethiopian-picker-day {
+            min-height: 31px;
+            font-size: 12px;
+            color: #333;
+            border-radius: 2px;
+        }
+
+        .ethiopian-picker-day:hover:not(:disabled) {
+            background: var(--bahmni-teal);
+            color: #fff;
+        }
+
+        .ethiopian-picker-day.selected {
+            background: var(--bahmni-blue);
+            color: #fff;
+            border-color: var(--bahmni-blue);
+        }
+
+        .ethiopian-picker-day:disabled {
+            cursor: not-allowed;
+            color: #777;
+            background: #f1f1f1;
+            border-color: #ddd;
+            text-decoration: line-through;
+        }
+
+        .ethiopian-picker-day.holiday:disabled {
+            background: #fbeaea;
+            color: #9b2f2f;
+        }
+
+        .ethiopian-picker-day.weekend:disabled {
+            background: #eeeeee;
+            color: #666;
+        }
+
+        .ethiopian-picker-note {
+            margin-top: 8px;
+            color: #666;
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .ethiopian-picker-holidays {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .ethiopian-picker-holiday-name {
+            display: inline-block;
+            margin: 2px 4px 2px 0;
+            padding: 2px 5px;
+            border: 1px solid #e4b5b5;
+            background: #fbeaea;
+            color: #8b2424;
+            cursor: help;
+        }
+
+        /* --- Mobile Responsive --- */
+        @media (max-width: 768px) {
+            .layout-container {
+                padding: 0 8px;
+            }
+            .header-nav {
+                margin: 8px;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .form-title {
+                margin: 0 8px;
+            }
+            .table-layout td {
+                padding: 6px 8px;
+            }
+            .table-header td {
+                padding: 4px 8px;
+            }
+            .table-layout td.label-cell {
+                width: 140px;
+                min-width: 140px;
+            }
+            .table-layout td.saved-cell {
+                min-width: 100px;
+                width: 100px;
+            }
+            input[type="text"],
+            input[type="number"] {
+                width: 140px;
+            }
+            textarea {
+                width: 160px;
+            }
+            .btn-group {
+                width: 180px;
+            }
+            .icon-btn {
+                right: 8px;
+                bottom: 6px;
+            }
+            .add-new-btn {
+                float: none;
+                margin-top: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                font-size: 12px;
+            }
+            .layout-container {
+                padding: 0 4px;
+            }
+            .main-content {
+                margin-top: 4px;
+                border-left: none;
+                border-right: none;
+            }
+            .opd-header-wrapper {
+                padding: 4px 10px;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .header-title {
+                font-size: 14px;
+            }
+
+            .table-layout,
+            .table-layout tbody,
+            .table-layout tr,
+            .table-layout td {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .table-layout td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                padding: 6px 8px;
+            }
+            .table-layout tr {
+                border: 1px solid #ccc;
+                margin-bottom: 6px;
+            }
+            .table-layout tr.table-header {
+                border: 1px solid #bbb;
+            }
+            .table-layout td.label-cell {
+                width: 100%;
+                min-width: 0;
+                background-color: #f0f0f0;
+                font-size: 12px;
+                padding: 4px 8px;
+                border-bottom: 1px solid #ddd;
+            }
+            .table-layout td.input-cell {
+                padding: 6px 8px;
+                min-height: 32px;
+            }
+            .table-layout td.saved-cell {
+                width: 100%;
+                min-width: 0;
+                padding: 4px 8px;
+                border-top: 1px solid #ddd;
+            }
+            .table-layout td[colspan] {
+                text-align: center;
+            }
+
+            input[type="text"],
+            input[type="number"] {
+                width: 100%;
+                max-width: 100%;
+            }
+            textarea {
+                width: 100%;
+                max-width: 100%;
+                height: 30px;
+            }
+            .btn-group {
+                width: 100%;
+            }
+            .bahmni-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            .autocomplete-wrapper {
+                max-width: 100%;
+            }
+            .autocomplete-wrapper input {
+                font-size: 12px;
+                padding: 6px 8px;
+            }
+            .pill-container {
+                gap: 4px;
+            }
+            .pill {
+                font-size: 11px;
+                padding: 3px 8px;
+            }
+
+            .table-layout tr:not(.table-header) td.label-cell {
+                width: 100%;
+            }
+            .icon-btn {
+                position: static;
+                display: inline-flex;
+                margin-top: 4px;
+            }
+            .icon-btn.adherence-btn {
+                position: absolute;
+                right: 8px;
+                top: 8px;
+            }
+            .table-layout td.input-cell {
+                position: relative;
+            }
+
+            .btn-wrapper {
+                padding: 12px;
+                flex-wrap: wrap;
+            }
+            .btn-save {
+                width: 100%;
+                text-align: center;
+                font-size: 13px;
+            }
+            .save-status {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 4px;
+            }
+            .add-new-btn {
+                width: 100%;
+                text-align: center;
+                float: none;
+                margin-top: 4px;
+            }
+
+            .ethiopian-picker {
+                width: 280px;
+                left: 50%;
+                margin-left: -140px;
+            }
+            .ethiopian-picker-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 2px;
+            }
+            .ethiopian-picker-day {
+                font-size: 11px;
+                padding: 4px 0;
+            }
+            .ethiopian-picker-header button {
+                font-size: 14px;
+                padding: 2px 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="opd-header-wrapper">
+        <div class="header-title">DM and HTN Follow up Form</div>
+        <div class="header-icons">
+            <span style="margin-right: 10px; cursor: pointer;">⚙</span>
+            <span style="margin-right: 10px; cursor: pointer;">➕</span>
+            <span style="margin-right: 10px; cursor: pointer;">📌</span>
+            <span style="cursor: pointer;">🗑</span>
+        </div>
+    </div>
+
+    <div class="header-nav">
+        <a href="#">&lt; Previous</a>
+        <a href="#">Next &gt;</a>
+    </div>
+    <div class="form-title">DM and HTN Follow up Form</div>
+
+    <div class="layout-container">
+        <!-- Main Content (Form) -->
+        <div class="main-content">
+
+            <form id="dmHtnForm">
+
+                <table class="table-layout">
+                    <tr class="table-header">
+                        <td></td>
+                        <td>Now <button type="button" class="add-new-btn" onclick="copyLastObservation()">Copy Last Observation</button> <button type="button" class="add-new-btn" onclick="resetNowColumn()">Add New</button></td>
+                    </tr>
+
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Diagnosis Categories</td>
+                    </tr>
+
+                    <tr>
+                        <td class="label-cell">Type of DM</td>
+                        <td class="input-cell" style="overflow: visible;">
+                            <div class="autocomplete-wrapper" style="max-width: 100%;">
+                                <input type="text" id="search-dm" placeholder="Search and select Type of DM..."
+                                    oninput="handleSearch(this, 'dm'); updateLifestyleButtons()" onfocus="handleSearch(this, 'dm')">
+                                <div class="autocomplete-dropdown" id="dropdown-dm"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Type of HTN</td>
+                        <td class="input-cell" style="overflow: visible;">
+                            <div class="autocomplete-wrapper" style="max-width: 100%;">
+                                <input type="text" id="search-htn" placeholder="Search and select Type of HTN..."
+                                    oninput="handleSearch(this, 'htn')" onfocus="handleSearch(this, 'htn')">
+                                <div class="autocomplete-dropdown" id="dropdown-htn"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="row-htn-grade" style="display: none;">
+                        <td class="label-cell">Grade (HTN)</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-htn-grade" readonly
+                                style="background-color: #eee; cursor: not-allowed; font-weight: bold; color: var(--bahmni-teal);"
+                                placeholder="Auto-calculated from BP">
+                            <span class="form-hint">Calculates automatically when Vitals BP is entered.</span>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Comorbidity/Complications</td>
+                        <td class="input-cell" style="overflow: visible;">
+                            <div class="autocomplete-wrapper" style="max-width: 100%;">
+                                <!-- Keydown event added for Enter to add custom entries -->
+                                <input type="text" id="search-comorb"
+                                    placeholder="Search and add multiple comorbidities..."
+                                    oninput="handleSearch(this, 'comorb')" onfocus="handleSearch(this, 'comorb')"
+                                    onkeydown="handleEnter(event, this, 'comorb')">
+                                <div class="autocomplete-dropdown" id="dropdown-comorb"></div>
+                                <div class="pill-container" id="pill-box-comorb"></div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tbody id="treatment-given-section" style="display:none;">
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Treatment given</td>
+                    </tr>
+
+                    <!-- Non-Pharmacologic -->
+                    <tr>
+                        <td class="label-cell" colspan="2"
+                            style="font-weight:bold; background:#eee; text-align:center;">Non-Pharmacologic</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Life style changes and Educations.</td>
+                        <td class="input-cell">
+                            <div class="btn-group">
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Physical Inactivity,Poor Dietary Adherence" onclick="toggleBtn(this, true)">Healthy Diet</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Tobacco Use" onclick="toggleBtn(this, true)">Cessation of Smoking</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Physical Inactivity" onclick="toggleBtn(this, true)">Exercise(Moderate to High Int...</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Weight Loss (5-10% of body w...</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Excessive Alcohol Consumption" onclick="toggleBtn(this, true)">Reduce Alcohol use</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Medication Adherence.</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Medication Side effects</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Proper Insulin/Drug storage</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Proper Insulin Injection Techn...</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Daily Foot Inspection</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Family Screening</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Pharmacologic -->
+                    <tr>
+                        <td class="label-cell" colspan="2"
+                            style="font-weight:bold; background:#eee; text-align:center;">Pharmacologic</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Oral Hypoglycemic Drugs</td>
+                        <td class="input-cell">
+                            <textarea id="obs-oral-bg-drugs" style="width:200px;" oninput="checkPharm()"></textarea>
+                            <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
+                                onclick="openAdherenceModal('Oral Hypoglycemic Drugs', this, 'obs-oral-bg-drugs')"
+                                style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
+                                💊</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">DM (Insulin)</td>
+                        <td class="input-cell">
+                            <textarea id="obs-dm-insulin" style="width:200px;" oninput="checkPharm()"></textarea>
+                            <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
+                                onclick="openAdherenceModal('DM (Insulin)', this, 'obs-dm-insulin')"
+                                style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
+                                💊</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">HTN-Treatment</td>
+                        <td class="input-cell">
+                            <textarea id="obs-htn-treatment" style="width:200px;" oninput="checkPharm()"></textarea>
+                            <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
+                                onclick="openAdherenceModal('HTN-Treatment', this, 'obs-htn-treatment')"
+                                style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
+                                💊</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Antiplatelet</td>
+                        <td class="input-cell">
+                            <textarea id="obs-antiplatelet" style="width:200px;" oninput="checkPharm()"></textarea>
+                            <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
+                                onclick="openAdherenceModal('Antiplatelet', this, 'obs-antiplatelet')"
+                                style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
+                                💊</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Dyslipidemia</td>
+                        <td class="input-cell">
+                            <textarea id="obs-dyslipidemia" style="width:200px;" oninput="checkPharm()"></textarea>
+                            <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
+                                onclick="openAdherenceModal('Dyslipidemia', this, 'obs-dyslipidemia')"
+                                style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
+                                💊</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Other Medication</td>
+                        <td class="input-cell">
+                            <textarea id="obs-other-meds" style="width:200px;" oninput="checkPharm()"></textarea>
+                            <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
+                                onclick="openAdherenceModal('Other Medication', this, 'obs-other-meds')"
+                                style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
+                                💊</div>
+                        </td>
+                    </tr>
+
+                    </tbody>
+
+                    <!-- New Overall Drug Adherence Row -->
+                    <tr id="row-overall-adherence" style="display: none;">
+                        <td class="label-cell" style="color: var(--bahmni-teal); font-weight: bold;">Drug Adherence</td>
+                        <td class="input-cell" style="display: flex; align-items: center;">
+                            <input type="text" id="obs-overall-adherence" readonly
+                                style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 100px; text-align: center;"
+                                placeholder="...">
+                            <span class="form-hint" style="margin-left: 10px;">(Auto-evaluated Good=All Missed 'No';
+                                Poor='Yes')</span>
+                        </td>
+                    </tr>
+
+                    <!-- Subjective Section -->
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Subjective Section</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Recent Complaint</td>
+                        <td class="input-cell"><textarea id="obs-symptoms"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Recent Risk Factors</td>
+                        <td class="input-cell" style="overflow: visible;">
+                            <div class="autocomplete-wrapper" style="max-width: 100%;">
+                                <input type="text" id="search-risks" placeholder="Search and add risk factors..."
+                                    oninput="handleSearch(this, 'risks')" onfocus="handleSearch(this, 'risks')"
+                                    onkeydown="handleEnter(event, this, 'risks')">
+                                <div class="autocomplete-dropdown" id="dropdown-risks"></div>
+                                <div class="pill-container" id="pill-box-risks"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="row-pregnant" style="display: none;">
+                        <td class="label-cell">Are You Pregnant?</td>
+                        <td class="input-cell">
+                            <div class="btn-group">
+                                <button type="button" class="bahmni-btn"
+                                    onclick="togglePregnancyBtn(this, 'Yes')">Yes</button>
+                                <button type="button" class="bahmni-btn"
+                                    onclick="togglePregnancyBtn(this, 'No')">No</button>
+                            </div>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-conceive" style="display: none;">
+                        <td class="label-cell">Are you planning to conceive recently?</td>
+                        <td class="input-cell">
+                            <div class="btn-group">
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">Yes</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">No</button>
+                            </div>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    <!-- Objective Section -->
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Objective Section</td>
+                    </tr>
+
+                    <!-- Vitals -->
+                    <tr>
+                        <td class="label-cell">Systolic Blood Pressure</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-sbp" oninput="allowOnlyInteger(this); calculateHTNGrade(); autoCalculateHTNStatus()">
+                            <span class="form-hint">(80 - 120)</span>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Diastolic Blood Pressure</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-dbp" oninput="allowOnlyInteger(this); calculateHTNGrade(); autoCalculateHTNStatus()">
+                            <span class="form-hint">(60 - 80)</span>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Pulse Rate</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-pulse" oninput="allowOnlyInteger(this); checkPulseRate()">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-pulse-volume" style="display: none;">
+                        <td class="label-cell">Pulse-Volume</td>
+                        <td class="input-cell">
+                            <div class="btn-group">
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">Non-palpable</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">Feable/Weak</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">Strong</button>
+                            </div>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-pulse-rythm" style="display: none;">
+                        <td class="label-cell">Pulse Rythm</td>
+                        <td class="input-cell">
+                            <div class="btn-group">
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">Regular</button>
+                                <button type="button" class="bahmni-btn"
+                                    onclick="toggleBtn(this)">Regularly-Irregular</button>
+                                <button type="button" class="bahmni-btn"
+                                    onclick="toggleBtn(this)">Irregularly-Irregular</button>
+                            </div>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Weight</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-weight" oninput="allowOnlyInteger(this); autoCalculateBMI()" placeholder="kg">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Height</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-height" oninput="allowOnlyInteger(this); autoCalculateBMI()" placeholder="cm">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-bmi" style="display: none;">
+                        <td class="label-cell">BMI</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-bmi" readonly
+                                style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 100px;">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-bmi-zscore" style="display: none;">
+                        <td class="label-cell">BMI Grading (WHO)</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-bmi-grading" readonly
+                                style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 280px;">
+                            <span class="form-hint" style="margin-left: 10px;">Auto-calculated from Weight and
+                                Height.</span>
+                        </td>
+                    </tr>
+                    <tr id="row-waist-entry" style="display: none;">
+                        <td class="label-cell">Waist Circumference</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-waist" oninput="allowOnlyInteger(this); autoCalculateWaistRisk()" placeholder="cm">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-metabolic-risk" style="display: none;">
+                        <td class="label-cell">Metabolic Risk</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-metabolic-risk" readonly
+                                style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 280px;">
+                            <span class="form-hint" id="hint-metabolic-risk"
+                                style="display: block; margin-top: 5px; color: #666; font-size: 11.5px;"></span>
+                        </td>
+                    </tr>
+
+                    <!-- Exams -->
+                    <tr>
+                        <td class="label-cell">Pertinent P/E Positive Finding?</td>
+                        <td class="input-cell">
+                            <div class="btn-group">
+                                <button type="button" class="bahmni-btn exam-visibility-btn" onclick="toggleExamForms(this, 'Yes')">Yes</button>
+                                <button type="button" class="bahmni-btn exam-visibility-btn" onclick="toggleExamForms(this, 'No')">No</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="pertinent-exam-row" style="display: none;">
+                        <td class="label-cell">Oral/Dental</td>
+                        <td class="input-cell">
+                            <textarea id="obs-exam-oral" placeholder="Specify findings..." style="width: 250px;"></textarea>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr class="pertinent-exam-row" style="display: none;">
+                        <td class="label-cell">Heart</td>
+                        <td class="input-cell">
+                            <textarea id="obs-exam-heart" placeholder="Specify findings..." style="width: 250px;"></textarea>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr class="pertinent-exam-row" style="display: none;">
+                        <td class="label-cell">Peripheral Arteries</td>
+                        <td class="input-cell">
+                            <textarea id="obs-exam-arteries" placeholder="Specify findings..." style="width: 250px;"></textarea>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr class="pertinent-exam-row" style="display: none;">
+                        <td class="label-cell">MSK-Foot Exam</td>
+                        <td class="input-cell">
+                            <textarea id="obs-exam-foot" placeholder="Specify findings..." style="width: 250px;"></textarea>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr class="pertinent-exam-row" style="display: none;">
+                        <td class="label-cell">Mental Status</td>
+                        <td class="input-cell">
+                            <textarea id="obs-exam-mental" placeholder="Specify findings..." style="width: 250px;"></textarea>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr class="pertinent-exam-row" style="display: none;">
+                        <td class="label-cell">Motor Exam</td>
+                        <td class="input-cell">
+                            <textarea id="obs-exam-motor" placeholder="Specify findings..." style="width: 250px;"></textarea>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr class="pertinent-exam-row" style="display: none;">
+                        <td class="label-cell">Sensory Exam</td>
+                        <td class="input-cell">
+                            <textarea id="obs-exam-sensory" placeholder="Specify findings..." style="width: 250px;"></textarea>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+
+                    <!-- Labs -->
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Pertinent Lab Ix</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">FBS(mg/dl)</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-fbs" oninput="allowOnlyInteger(this); checkKetoneTrigger(); autoCalculateDMStatus()">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">RBS(mg/dl)</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-rbs" oninput="allowOnlyInteger(this); checkKetoneTrigger(); autoCalculateDMStatus()">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">HgA1c(%)</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-hga1c" oninput="allowOnlyInteger(this); autoCalculateDMStatus()">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-urine-ketone" style="display: none;">
+                        <td class="label-cell">Urine ketone_</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-ketone">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Urine Albumin(Protein)</td>
+                        <td class="input-cell">
+                            <select id="obs-albumin" onchange="toggleUrineProtein()" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
+                                <option value=""></option>
+                                <option value="Nil">Nil</option>
+                                <option value="Trace">Trace</option>
+                                <option value="1+">1+</option>
+                                <option value="2+">2+</option>
+                                <option value="3+">3+</option>
+                                <option value="4+">4+</option>
+                            </select>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Urine Microscopic findings</td>
+                        <td class="input-cell">
+                            <textarea id="obs-micro"></textarea>
+                        </td>
+                    </tr>
+                    <tr id="row-urine-protein" style="display: none;">
+                        <td class="label-cell">24-hr Urine Protein(mg/day)</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-urine-prof">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Creatinine</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-creatinine" oninput="allowOnlyInteger(this); autoCalculateGFR()">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-gfr" style="display: none;">
+                        <td class="label-cell">GFR(ml/min/1.73 m2)</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-gfr" readonly style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 120px; color: var(--bahmni-teal);">
+                            <span class="form-hint" style="margin-left: 10px;">(2021 CKD-EPI)</span>
+                        </td>
+                    </tr>
+                    <tr id="row-gfr-kdigo" style="display: none;">
+                        <td class="label-cell">KDIGO Category</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-gfr-kdigo" readonly style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 280px;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Na+</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-na" oninput="allowOnlyInteger(this)">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">K+</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-k" oninput="allowOnlyInteger(this)">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Triglyceride</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-triglyceride" oninput="allowOnlyInteger(this)">
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+
+
+                    <tr>
+                        <td class="label-cell">LDL</td>
+                        <td class="input-cell">
+                            <input type="text" id="obs-ldl" oninput="allowOnlyInteger(this)">
+                            <span class="form-hint">(0 - 140)</span>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">ECG</td>
+                        <td class="input-cell"><textarea id="obs-ecg"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">ECHO</td>
+                        <td class="input-cell"><textarea id="obs-echo"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Fundoscopic Finding</td>
+                        <td class="input-cell"><textarea id="obs-fundoscopic"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Other Investigation</td>
+                        <td class="input-cell"><textarea id="obs-other-investigation"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Overall Assesment</td>
+                        <td class="input-cell"><textarea id="obs-overall-assessment"></textarea></td>
+                    </tr>
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Disease Outcome</td>
+                    </tr>
+                    <tr id="row-dm-status" style="display: none;">
+                        <td class="label-cell">DM</td>
+                        <td class="input-cell">
+                            <select id="dm-status" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
+                                <option value=""></option>
+                                <option value="Controlled">Controlled</option>
+                                <option value="Uncontrolled">Uncontrolled</option>
+                            </select>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-htn-status" style="display: none;">
+                        <td class="label-cell">HTN</td>
+                        <td class="input-cell">
+                            <select id="htn-status" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
+                                <option value=""></option>
+                                <option value="Controlled">Controlled</option>
+                                <option value="Uncontrolled">Uncontrolled</option>
+                            </select>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-comorb-status" style="display: none;">
+                        <td class="label-cell">Comorbidity/Complication(s)</td>
+                        <td class="input-cell">
+                            <select id="obs-comorb-status" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
+                                <option value=""></option>
+                                <option value="Same">Same</option>
+                                <option value="Corrected">Corrected</option>
+                                <option value="Controlled">Controlled</option>
+                                <option value="Uncontrolled">Uncontrolled</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <!-- Treatment Section (copy) -->
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Treatment</td>
+                    </tr>
+
+                    <!-- Non-Pharmacologic -->
+                    <tr>
+                        <td class="label-cell" colspan="2"
+                            style="font-weight:bold; background:#eee; text-align:center;">Non-Pharmacologic</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Life style changes and Educations.</td>
+                        <td class="input-cell">
+                            <div class="btn-group" id="treatment-life-style-btns">
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Physical Inactivity,Poor Dietary Adherence" onclick="toggleBtn(this, true)">Healthy Diet</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Tobacco Use" onclick="toggleBtn(this, true)">Cessation of Smoking</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Physical Inactivity" onclick="toggleBtn(this, true)">Exercise(Moderate to High Int...</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-min-bmi="25" onclick="toggleBtn(this, true)">Weight Loss (5-10% of body w...</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Excessive Alcohol Consumption" onclick="toggleBtn(this, true)">Reduce Alcohol use</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-risks="Khat Chewing" onclick="toggleBtn(this, true)">Cessation of Chewing Khat</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-show-on-adherence="Poor" onclick="toggleBtn(this, true)">Medication Adherence.</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this, true)">Medication Side effects</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-show-on-field="obs-dm-insulin-copy" onclick="toggleBtn(this, true)">Proper Insulin/Drug storage</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-show-on-field="obs-dm-insulin-copy" onclick="toggleBtn(this, true)">Proper Insulin Injection Techn...</button>
+                                <button type="button" class="bahmni-btn risk-linked" data-show-on-dm="Type 2 Diabetes Mellitus" data-show-on-comorb="Diabetic Neuropathy,Diabetic Foot Ulcer,PAD" onclick="toggleBtn(this, true)">Daily Foot Inspection</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Pharmacologic -->
+                    <tr>
+                        <td class="label-cell" colspan="2"
+                            style="font-weight:bold; background:#eee; text-align:center;">
+                            Pharmacologic
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Oral Hypoglycemic Drugs</td>
+                        <td class="input-cell">
+                            <textarea id="obs-oral-bg-drugs-copy" style="width:200px;"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">DM (Insulin)</td>
+                        <td class="input-cell">
+                            <textarea id="obs-dm-insulin-copy" style="width:200px;" oninput="updateLifestyleButtons()"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">HTN-Treatment</td>
+                        <td class="input-cell">
+                            <textarea id="obs-htn-treatment-copy" style="width:200px;"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Antiplatelet</td>
+                        <td class="input-cell">
+                            <textarea id="obs-antiplatelet-copy" style="width:200px;"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Dyslipidemia</td>
+                        <td class="input-cell">
+                            <textarea id="obs-dyslipidemia-copy" style="width:200px;"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Other Medication</td>
+                        <td class="input-cell">
+                            <textarea id="obs-other-meds-copy" style="width:200px;"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Linked to</td>
+                        <td class="input-cell"><textarea id="obs-linked-to" oninput="toggleEntryLinkedRow('obs-linked-to', 'row-linkage-note', 'obs-linkage-note')"></textarea></td>
+                    </tr>
+                    <tr id="row-linkage-note" style="display: none;">
+                        <td class="label-cell">Linkage note</td>
+                        <td class="input-cell"><textarea id="obs-linkage-note"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Consultation To</td>
+                        <td class="input-cell"><textarea id="obs-consultation-to" oninput="toggleEntryLinkedRow('obs-consultation-to', 'row-consultation-note', 'obs-consultation-note')"></textarea></td>
+                    </tr>
+                    <tr id="row-consultation-note" style="display: none;">
+                        <td class="label-cell">Consultation Note:</td>
+                        <td class="input-cell"><textarea id="obs-consultation-note"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Referral To</td>
+                        <td class="input-cell"><textarea id="obs-referral-to" oninput="toggleEntryLinkedRow('obs-referral-to', 'row-referral-reason', 'obs-referral-reason')"></textarea></td>
+                    </tr>
+                    <tr id="row-referral-reason" style="display: none;">
+                        <td class="label-cell">Referral Reason?</td>
+                        <td class="input-cell"><textarea id="obs-referral-reason"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Remark</td>
+                        <td class="input-cell"><textarea id="obs-remark"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Appointment</td>
+                        <td class="input-cell">
+                            <div class="ethiopian-date-field" id="appointment-date-field">
+                                <input type="text" id="obs-appointment" readonly placeholder="Select Ethiopian date"
+                                    onclick="toggleAppointmentPicker(true, event)">
+                                <input type="hidden" id="obs-appointment-gregorian">
+                                <button type="button" class="calendar-trigger" title="Open Ethiopian date picker"
+                                    onclick="toggleAppointmentPicker(true, event)">Cal</button>
+                                <div id="appointment-picker" class="ethiopian-picker"></div>
+                                <span id="appointment-date-note" class="form-hint">Weekends and full holidays are inactive.</span>
+                            </div>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <div class="btn-wrapper">
+                    <span id="save-status" class="save-status"></span>
+                    <button type="button" class="btn-save" onclick="saveFormSnapshot()">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- UI & Demographics Init Logic ---
+        // Mock Demographics for testing Conditional Elements
+        const patientDemographics = { age: 28, gender: 'F' };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (patientDemographics.gender === 'F' && patientDemographics.age >= 15 && patientDemographics.age <= 45) {
+                document.getElementById('row-pregnant').style.display = 'table-row';
+            }
+            if (patientDemographics.age >= 20) {
+                document.getElementById('row-waist-entry').style.display = 'table-row';
+            }
+            updateComorbStatusVisibility();
+            toggleEntryLinkedRow('obs-linked-to', 'row-linkage-note', 'obs-linkage-note');
+            toggleEntryLinkedRow('obs-consultation-to', 'row-consultation-note', 'obs-consultation-note');
+            toggleEntryLinkedRow('obs-referral-to', 'row-referral-reason', 'obs-referral-reason');
+            initAppointmentPicker();
+            updateLifestyleButtons();
+        });
+
+        function togglePregnancyBtn(btn, val) {
+            toggleBtn(btn);
+            const conceiveRow = document.getElementById('row-conceive');
+            if (val === 'No' && btn.classList.contains('selected')) {
+                conceiveRow.style.display = 'table-row';
+            } else {
+                conceiveRow.style.display = 'none';
+                conceiveRow.querySelectorAll('.bahmni-btn').forEach(b => b.classList.remove('selected'));
+            }
+        }
+
+        function toggleExamForms(btn, val) {
+            document.querySelectorAll('.exam-visibility-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            
+            const examRows = document.querySelectorAll('.pertinent-exam-row');
+            if (val === 'Yes') {
+                examRows.forEach(row => row.style.display = 'table-row');
+            } else {
+                examRows.forEach(row => {
+                    row.style.display = 'none';
+                    const textarea = row.querySelector('textarea');
+                    if (textarea) textarea.value = '';
+                });
+            }
+        }
+
+        // --- Diagnosis Search Logic ---
+
+        // Mock Data Dictionary mimicking Bahmni OpenMRS Concepts
+        const dictConcepts = {
+            'dm': ['Type 1 Diabetes Mellitus', 'Type 2 Diabetes Mellitus', 'Gestational (GDM)', 'MODY', 'Other Secondaries'],
+            'htn': ['Essential (Primary) Hypertension', 'Secondary Hypertension'],
+            'comorb': ['Diabetic Retinopathy', 'Diabetic Neuropathy', 'Diabetic Nephropathy', 'Diabetic Foot Ulcer', 'DKA (Diabetic Ketoacidosis)', 'HHS (Hyperosmolar Hyperglycemic State)', 'CKD (Chronic Kidney Disease)', 'Old Ischemic Stroke', 'Old Hemorrhagic stroke', 'HHD', 'PAD', 'Erectile dysfunction', 'Diabetic Amputation', 'BPH(Benign Prostatic Hyperplasia)', 'Gouty Arthritis', 'ET(Essential Tremor)', 'Parkinson\'s Disease', 'RVI(Retroviral Infection)', 'Bronchial Asthma', 'COPD', 'TMNG', 'Epilepsy', 'MDD'],
+            'risks': ['Tobacco Use', 'Physical Inactivity', 'Excessive Alcohol Consumption', 'Poor Dietary Adherence', 'Khat Chewing']
+        };
+
+        function handleSearch(inputElem, type) {
+            const dropdown = document.getElementById(`dropdown-${type}`);
+            const query = inputElem.value.toLowerCase();
+            const allOptions = dictConcepts[type] || [];
+
+            // Filter options based on input
+            const matchedOptions = allOptions.filter(opt => opt.toLowerCase().includes(query));
+
+            dropdown.innerHTML = ''; // clear previous
+
+            if (matchedOptions.length > 0) {
+                matchedOptions.forEach(opt => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-option';
+                    div.innerText = opt;
+
+                    // Click event for the option
+                    div.onclick = function () {
+                        if (type === 'comorb' || type === 'risks') {
+                            // Multi-select creates a pill
+                            addPill(`pill-box-${type}`, opt);
+                            inputElem.value = ''; // clear search field
+                        } else {
+                            // Single-select directly populates input field
+                            inputElem.value = opt;
+                            if (type === 'dm') updateLifestyleButtons();
+                        }
+                        dropdown.classList.remove('active');
+                    };
+                    dropdown.appendChild(div);
+                });
+                dropdown.classList.add('active');
+            } else {
+                dropdown.classList.remove('active');
+            }
+
+            // Allow custom add for comorbidity if no exact match or if list is empty
+            if ((type === 'comorb' || type === 'risks') && query.trim().length > 0) {
+                // Determine if exactly matched
+                const exactMatch = matchedOptions.some(opt => opt.toLowerCase() === query.trim().toLowerCase());
+                if (!exactMatch) {
+                    const addDiv = document.createElement('div');
+                    addDiv.className = 'autocomplete-option';
+                    addDiv.style.fontWeight = 'bold';
+                    addDiv.style.color = 'var(--bahmni-teal)';
+                    addDiv.innerText = `+ Add Custom: "${inputElem.value.trim()}"`;
+                    addDiv.onclick = function () {
+                        addPill(`pill-box-${type}`, inputElem.value.trim());
+                        inputElem.value = '';
+                        dropdown.classList.remove('active');
+                    };
+                    dropdown.appendChild(addDiv);
+                    dropdown.classList.add('active'); // ensure dropdown is visible
+                }
+            }
+        }
+
+        // Add a pill for multi-select
+        function addPill(containerId, value) {
+            const container = document.getElementById(containerId);
+
+            // Prevent duplicates
+            const existing = Array.from(container.children).map(c => c.dataset.val);
+            if (existing.includes(value)) return;
+
+            const pill = document.createElement('div');
+            pill.className = 'pill';
+            pill.dataset.val = value;
+            pill.innerHTML = `
+                ${value} 
+                <span class="remove-pill" onclick="this.parentElement.remove(); updateLifestyleButtons()">×</span>
+            `;
+            container.appendChild(pill);
+
+            if (containerId === 'pill-box-risks' || containerId === 'pill-box-comorb') {
+                updateLifestyleButtons();
+            }
+        }
+
+        // Handle Enter key for custom pills
+        function handleEnter(event, inputElem, type) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // prevent form submission
+
+                const val = inputElem.value.trim();
+                // For multi-select, enter commits custom pill directly
+                if (val && (type === 'comorb' || type === 'risks')) {
+                    addPill(`pill-box-${type}`, val);
+                    inputElem.value = ''; // Reset input
+
+                    const dropdown = document.getElementById(`dropdown-${type}`);
+                    if (dropdown) dropdown.classList.remove('active');
+                }
+            }
+        }
+
+        // Auto-calculate HTN Grade
+        function calculateHTNGrade() {
+            const sbpStr = document.getElementById('obs-sbp').value;
+            const dbpStr = document.getElementById('obs-dbp').value;
+            const gradeInput = document.getElementById('obs-htn-grade');
+            const gradeRow = document.getElementById('row-htn-grade');
+            if (!gradeInput) return;
+
+            let sbp = parseInt(sbpStr) || 0;
+            let dbp = parseInt(dbpStr) || 0;
+
+            if (sbp === 0 && dbp === 0) {
+                gradeInput.value = '';
+                if (gradeRow) gradeRow.style.display = 'none';
+                return;
+            }
+
+            if (gradeRow) gradeRow.style.display = 'table-row';
+
+            let grade = "";
+            if (sbp >= 180 || dbp >= 110) {
+                grade = "Grade-3";
+            } else if (sbp >= 160 || dbp >= 100) {
+                grade = "Grade-2";
+            } else if (sbp >= 140 || dbp >= 90) {
+                grade = "Grade-1";
+            } else {
+                grade = "Normal";
+            }
+
+            gradeInput.value = grade;
+
+            // Visual feedback flash
+            gradeInput.style.transition = 'background-color 0.3s';
+            gradeInput.style.backgroundColor = '#d4edda';
+            setTimeout(() => {
+                gradeInput.style.backgroundColor = '#eee';
+            }, 800);
+        }
+
+        function checkPulseRate() {
+            const valStr = document.getElementById('obs-pulse').value.trim();
+            const isInteger = /^\d+$/.test(valStr);
+
+            const volRow = document.getElementById('row-pulse-volume');
+            const rythmRow = document.getElementById('row-pulse-rythm');
+
+            if (isInteger && parseInt(valStr, 10) > 0) {
+                if (volRow) volRow.style.display = 'table-row';
+                if (rythmRow) rythmRow.style.display = 'table-row';
+            } else {
+                if (volRow) {
+                    volRow.style.display = 'none';
+                    volRow.querySelectorAll('.bahmni-btn').forEach(b => b.classList.remove('selected'));
+                }
+                if (rythmRow) {
+                    rythmRow.style.display = 'none';
+                    rythmRow.querySelectorAll('.bahmni-btn').forEach(b => b.classList.remove('selected'));
+                }
+            }
+        }
+
+        // Check Ketone Triggers
+        function checkKetoneTrigger() {
+            const fbsStr = document.getElementById('obs-fbs').value.trim();
+            const rbsStr = document.getElementById('obs-rbs').value.trim();
+            const rowKetone = document.getElementById('row-urine-ketone');
+            
+            const fbs = parseFloat(fbsStr);
+            const rbs = parseFloat(rbsStr);
+
+            if ((!isNaN(fbs) && fbs >= 250) || (!isNaN(rbs) && rbs >= 350)) {
+                if (rowKetone) rowKetone.style.display = 'table-row';
+            } else {
+                if (rowKetone) {
+                    rowKetone.style.display = 'none';
+                    const ketoneInput = document.getElementById('obs-ketone');
+                    if (ketoneInput) ketoneInput.value = '';
+                }
+            }
+        }
+
+        // Auto-calculate GFR using 2021 CKD-EPI
+        function autoCalculateGFR() {
+            const crStr = document.getElementById('obs-creatinine').value.trim();
+            const cr = parseFloat(crStr);
+            const gender = patientDemographics.gender || 'F';
+            const age = patientDemographics.age || 28;
+            
+            const rowGfr = document.getElementById('row-gfr');
+            const inputGfr = document.getElementById('obs-gfr');
+
+            if (!isNaN(cr) && cr > 0) {
+                let kappa, alpha, genderMultiplier;
+
+                if (gender === 'F') {
+                    kappa = 0.7;
+                    alpha = (cr <= 0.7) ? -0.241 : -1.2;
+                    genderMultiplier = 1.012;
+                } else {
+                    kappa = 0.9;
+                    alpha = (cr <= 0.9) ? -0.302 : -1.2;
+                    genderMultiplier = 1;
+                }
+                
+                const gfr = 142 * Math.pow((cr / kappa), alpha) * Math.pow(0.9938, age) * genderMultiplier;
+                
+                inputGfr.value = gfr.toFixed(2);
+                if (rowGfr) rowGfr.style.display = 'table-row';
+
+                const rowGfrKdigo = document.getElementById('row-gfr-kdigo');
+                const inputGfrKdigo = document.getElementById('obs-gfr-kdigo');
+                
+                let kdigoStage = "";
+                let kdigoDesc = "";
+                let color = "";
+
+                if (gfr >= 90) {
+                    kdigoStage = "G1";
+                    kdigoDesc = "Normal or high";
+                    color = "#5cb85c"; // Green
+                } else if (gfr >= 60) {
+                    kdigoStage = "G2";
+                    kdigoDesc = "Mildly decreased";
+                    color = "#5cb85c"; // Light green
+                } else if (gfr >= 45) {
+                    kdigoStage = "G3a";
+                    kdigoDesc = "Mildly to moderately decreased";
+                    color = "#f0ad4e"; // Yellow/Orange
+                } else if (gfr >= 30) {
+                    kdigoStage = "G3b";
+                    kdigoDesc = "Moderately to severely decreased";
+                    color = "#e67e22"; // Orange
+                } else if (gfr >= 15) {
+                    kdigoStage = "G4";
+                    kdigoDesc = "Severely decreased";
+                    color = "#d9534f"; // Red
+                } else {
+                    kdigoStage = "G5";
+                    kdigoDesc = "Kidney failure";
+                    color = "#c0392b"; // Dark Red
+                }
+
+                if (inputGfrKdigo) {
+                    inputGfrKdigo.value = `${kdigoStage}: ${kdigoDesc}`;
+                    inputGfrKdigo.style.color = color;
+                }
+                if (rowGfrKdigo) rowGfrKdigo.style.display = 'table-row';
+
+            } else {
+                if (rowGfr) rowGfr.style.display = 'none';
+                if (inputGfr) inputGfr.value = '';
+                const rowGfrKdigo = document.getElementById('row-gfr-kdigo');
+                if (rowGfrKdigo) rowGfrKdigo.style.display = 'none';
+                const inputGfrKdigo = document.getElementById('obs-gfr-kdigo');
+                if (inputGfrKdigo) inputGfrKdigo.value = '';
+            }
+        }
+
+        // --- Adherence Modal Logic ---
+        let activeDrugIcon = null;
+        let currentModalDrugId = null;
+        let adherenceState = {};
+
+        function checkPharm() {
+            const ids = ['obs-oral-bg-drugs', 'obs-dm-insulin', 'obs-htn-treatment', 'obs-antiplatelet', 'obs-dyslipidemia', 'obs-other-meds'];
+            var hasText = false;
+            ids.forEach(function(id) {
+                var el = document.getElementById(id);
+                var hasEntry = el && el.value.trim().length > 0;
+                if (hasEntry) hasText = true;
+                var row = el ? el.closest('tr') : null;
+                if (row) row.style.display = hasEntry ? 'table-row' : 'none';
+                if (el) {
+                    var cell = el.closest('.input-cell');
+                    if (cell) {
+                        var btn = cell.querySelector('.adherence-btn');
+                        if (btn) btn.style.display = hasEntry ? '' : 'none';
+                    }
+                }
+            });
+            const row = document.getElementById('row-overall-adherence');
+            if (row) {
+                row.style.display = hasText ? 'table-row' : 'none';
+            }
+        }
+
+        function copyTreatmentGivenMedications() {
+            const medicationFields = [
+                ['obs-oral-bg-drugs', 'obs-oral-bg-drugs-copy'],
+                ['obs-dm-insulin', 'obs-dm-insulin-copy'],
+                ['obs-htn-treatment', 'obs-htn-treatment-copy'],
+                ['obs-antiplatelet', 'obs-antiplatelet-copy'],
+                ['obs-dyslipidemia', 'obs-dyslipidemia-copy'],
+                ['obs-other-meds', 'obs-other-meds-copy']
+            ];
+
+            medicationFields.forEach(([sourceId, targetId]) => {
+                const source = document.getElementById(sourceId);
+                const target = document.getElementById(targetId);
+                if (source && target) target.value = source.value;
+            });
+
+            updateLifestyleButtons();
+        }
+
+        const SAVE_SESSION_WINDOW_MS = 12 * 60 * 60 * 1000;
+        let currentSaveSession = null;
+
+        function formatSaveTimestamp(date) {
+            const ethiopianDate = gregorianToEthiopian(date);
+            const time = date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+
+            return `${ethiopianMonths[ethiopianDate.month - 1]} ${ethiopianDate.day}, ${ethiopianDate.year} E.C. ${time}`;
+        }
+
+        function getRowEntryValue(inputCell) {
+            const pills = Array.from(inputCell.querySelectorAll('.pill'))
+                .map(pill => pill.dataset.val || pill.textContent.replace('×', '').trim())
+                .filter(Boolean);
+            if (pills.length > 0) return pills.join(', ');
+
+            const selectedButtons = Array.from(inputCell.querySelectorAll('.bahmni-btn.selected'))
+                .map(btn => btn.textContent.trim())
+                .filter(Boolean);
+            if (selectedButtons.length > 0) return selectedButtons.join(', ');
+
+            const fields = Array.from(inputCell.querySelectorAll('input, textarea, select'))
+                .filter(field => field.type !== 'hidden')
+                .map(field => {
+                    if (field.tagName === 'SELECT') {
+                        return field.options[field.selectedIndex] ? field.options[field.selectedIndex].text.trim() : '';
+                    }
+                    return field.value.trim();
+                })
+                .filter(Boolean);
+
+            return fields.join('\n');
+        }
+
+        function ensureSavedColumnForRow(row, sessionId) {
+            const inputCell = row.querySelector(':scope > td.input-cell');
+            if (!inputCell) return null;
+
+            const existingCell = row.querySelector(`:scope > td.saved-cell[data-save-session-id="${sessionId}"]`);
+            if (existingCell) return existingCell;
+
+            const savedCell = document.createElement('td');
+            savedCell.className = 'saved-cell';
+            savedCell.dataset.saveSessionId = sessionId;
+            row.appendChild(savedCell);
+            return savedCell;
+        }
+
+        function ensureSaveColumnHeader(sessionId, savedAtText) {
+            const headerRow = document.querySelector('.table-layout > tbody > tr.table-header:first-child') ||
+                document.querySelector('.table-layout > tr.table-header:first-child');
+            if (!headerRow) return false;
+
+            const existingHeader = headerRow.querySelector(`:scope > td.saved-cell[data-save-session-id="${sessionId}"]`);
+            if (existingHeader) {
+                existingHeader.innerHTML = `<strong>${escapeHtml(savedAtText)}</strong>`;
+                return false;
+            }
+
+            const savedHeader = document.createElement('td');
+            savedHeader.className = 'saved-cell';
+            savedHeader.dataset.saveSessionId = sessionId;
+            savedHeader.innerHTML = `<strong>${escapeHtml(savedAtText)}</strong>`;
+            headerRow.appendChild(savedHeader);
+            return true;
+        }
+
+        function expandSectionColspans() {
+            document.querySelectorAll('.table-layout tr').forEach(row => {
+                const cells = row.children;
+                if (cells.length === 1 && cells[0].hasAttribute('colspan')) {
+                    const current = parseInt(cells[0].getAttribute('colspan'), 10);
+                    cells[0].setAttribute('colspan', String(current + 1));
+                }
+            });
+        }
+
+        function saveFormSnapshot() {
+            const savedAt = new Date();
+            const savedAtText = formatSaveTimestamp(savedAt);
+            const shouldUpdateCurrentSession = currentSaveSession &&
+                (savedAt.getTime() - currentSaveSession.startedAt.getTime()) < SAVE_SESSION_WINDOW_MS;
+            const sessionId = shouldUpdateCurrentSession
+                ? currentSaveSession.id
+                : `save-session-${savedAt.getTime()}`;
+            const rows = Array.from(document.querySelectorAll('.table-layout tr'));
+
+            const addedNewColumn = ensureSaveColumnHeader(sessionId, savedAtText);
+            currentSaveSession = {
+                id: sessionId,
+                startedAt: shouldUpdateCurrentSession ? currentSaveSession.startedAt : savedAt,
+                savedAt: savedAt
+            };
+
+            rows.forEach(row => {
+                if (row.closest('tbody')?.id === 'treatment-given-section') return;
+                if (row.classList.contains('table-header')) return;
+
+                const savedCell = ensureSavedColumnForRow(row, sessionId);
+                if (!savedCell) return;
+
+                const inputCell = row.querySelector(':scope > td.input-cell');
+                const value = getRowEntryValue(inputCell);
+                savedCell.innerHTML = value ? `<div class="saved-value">${escapeHtml(value)}</div>` : '';
+            });
+
+            if (addedNewColumn) expandSectionColspans();
+
+            const status = document.getElementById('save-status');
+            if (status) {
+                status.innerText = `Form saved successfully at ${savedAtText}`;
+                window.setTimeout(() => {
+                    if (status.innerText.includes(savedAtText)) status.innerText = '';
+                }, 4000);
+            }
+        }
+
+        function allowOnlyInteger(input) {
+            input.value = input.value.replace(/[^0-9]/g, '');
+        }
+
+        function resetNowColumn() {
+            document.querySelectorAll('.table-layout .input-cell').forEach(function(cell) {
+                cell.querySelectorAll('input:not([type="hidden"]), textarea').forEach(function(field) {
+                    field.value = '';
+                });
+                cell.querySelectorAll('select').forEach(function(sel) {
+                    sel.selectedIndex = 0;
+                });
+                cell.querySelectorAll('.pill-container').forEach(function(c) {
+                    c.innerHTML = '';
+                });
+                cell.querySelectorAll('.bahmni-btn.selected').forEach(function(btn) {
+                    btn.classList.remove('selected');
+                });
+            });
+
+            var section = document.getElementById('treatment-given-section');
+            if (section) section.style.display = 'none';
+
+            var apptInput = document.getElementById('obs-appointment');
+            if (apptInput) apptInput.value = '';
+            var apptGreg = document.getElementById('obs-appointment-gregorian');
+            if (apptGreg) apptGreg.value = '';
+            var apptNote = document.getElementById('appointment-date-note');
+            if (apptNote) apptNote.innerText = 'Weekends and full holidays are inactive.';
+
+            updateLifestyleButtons();
+        }
+
+        function restoreInputValue(inputCell, value) {
+            const pillContainer = inputCell.querySelector('.pill-container');
+
+            if (pillContainer) {
+                pillContainer.innerHTML = '';
+                const items = value.split(',').map(s => s.trim()).filter(Boolean);
+                items.forEach(item => {
+                    const pill = document.createElement('div');
+                    pill.className = 'pill';
+                    pill.dataset.val = item;
+                    pill.innerHTML = item + ' <span class="remove-pill" onclick="this.parentElement.remove(); updateLifestyleButtons()">\u00d7</span>';
+                    pillContainer.appendChild(pill);
+                });
+                return;
+            }
+
+            const btnGroup = inputCell.querySelector('.btn-group');
+            if (btnGroup) {
+                const selectedLabels = value.split(',').map(s => s.trim());
+                btnGroup.querySelectorAll('.bahmni-btn').forEach(btn => {
+                    if (selectedLabels.includes(btn.textContent.trim())) {
+                        btn.classList.add('selected');
+                    } else {
+                        btn.classList.remove('selected');
+                    }
+                });
+                return;
+            }
+
+            const fields = inputCell.querySelectorAll('input:not([type="hidden"]), textarea, select');
+            if (fields.length === 1) {
+                const field = fields[0];
+                if (field.tagName === 'SELECT') {
+                    const option = Array.from(field.options).find(opt => opt.text === value);
+                    if (option) field.value = option.value;
+                } else {
+                    field.value = value;
+                }
+            }
+        }
+
+        function copyLastObservation() {
+            const headerRow = document.querySelector('.table-layout tr.table-header:first-child');
+            if (!headerRow) return;
+            const savedHeaders = headerRow.querySelectorAll('td.saved-cell');
+            if (savedHeaders.length === 0) return;
+            const lastSessionId = savedHeaders[savedHeaders.length - 1].dataset.saveSessionId;
+
+            const treatmentGivenSection = document.getElementById('treatment-given-section');
+            if (treatmentGivenSection) {
+                treatmentGivenSection.style.display = '';
+            }
+
+            const skipFieldIds = [
+                'obs-sbp', 'obs-dbp', 'obs-weight', 'obs-symptoms',
+                'obs-fbs', 'obs-rbs', 'obs-hga1c', 'obs-ketone',
+                'obs-albumin', 'obs-micro', 'obs-urine-prof', 'obs-creatinine',
+                'obs-gfr', 'obs-gfr-kdigo', 'obs-na', 'obs-k',
+                'obs-triglyceride', 'obs-ldl', 'obs-ecg', 'obs-echo',
+                'obs-fundoscopic', 'obs-other-investigation', 'obs-overall-assessment',
+                'obs-appointment', 'obs-overall-adherence'
+            ];
+            const rows = document.querySelectorAll('.table-layout tr');
+
+            rows.forEach(row => {
+                if (row.closest('tbody')?.id === 'treatment-given-section') return;
+                if (row.classList.contains('table-header')) return;
+
+                const inputCell = row.querySelector(':scope > td.input-cell');
+                if (!inputCell) return;
+
+                const primaryField = inputCell.querySelector('input:not([type="hidden"]), textarea, select');
+                if (primaryField && skipFieldIds.includes(primaryField.id)) return;
+
+                const savedCell = row.querySelector(':scope > td.saved-cell[data-save-session-id="' + lastSessionId + '"]');
+                if (!savedCell) return;
+                const savedDiv = savedCell.querySelector('.saved-value');
+                if (!savedDiv || !savedDiv.textContent.trim()) return;
+
+                restoreInputValue(inputCell, savedDiv.textContent.trim());
+            });
+
+            if (treatmentGivenSection) {
+                const medMap = [
+                    ['obs-oral-bg-drugs', 'obs-oral-bg-drugs-copy'],
+                    ['obs-dm-insulin', 'obs-dm-insulin-copy'],
+                    ['obs-htn-treatment', 'obs-htn-treatment-copy'],
+                    ['obs-antiplatelet', 'obs-antiplatelet-copy'],
+                    ['obs-dyslipidemia', 'obs-dyslipidemia-copy'],
+                    ['obs-other-meds', 'obs-other-meds-copy']
+                ];
+
+                medMap.forEach(function(pair) {
+                    var givenId = pair[0];
+                    var treatmentId = pair[1];
+                    var treatmentInput = document.getElementById(treatmentId);
+                    if (!treatmentInput) return;
+                    var treatmentRow = treatmentInput.closest('tr');
+                    if (!treatmentRow) return;
+                    var savedCell = treatmentRow.querySelector(':scope > td.saved-cell[data-save-session-id="' + lastSessionId + '"]');
+                    if (!savedCell) return;
+                    var savedDiv = savedCell.querySelector('.saved-value');
+                    if (!savedDiv) return;
+
+                    var givenInput = document.getElementById(givenId);
+                    if (givenInput) givenInput.value = savedDiv.textContent.trim();
+                });
+
+                var treatmentNonPharmDiv = document.getElementById('treatment-life-style-btns');
+                if (treatmentNonPharmDiv) {
+                    var treatmentRow = treatmentNonPharmDiv.closest('tr');
+                    if (treatmentRow) {
+                        var savedCell = treatmentRow.querySelector(':scope > td.saved-cell[data-save-session-id="' + lastSessionId + '"]');
+                        if (savedCell) {
+                            var savedDiv = savedCell.querySelector('.saved-value');
+                            if (savedDiv && savedDiv.textContent.trim()) {
+                                var selectedLabels = savedDiv.textContent.trim().split(',').map(function(s) { return s.trim(); });
+                                var givenBtnsContainer = treatmentGivenSection.querySelector('.btn-group');
+                                if (givenBtnsContainer) {
+                                    givenBtnsContainer.querySelectorAll('.bahmni-btn').forEach(function(btn) {
+                                        if (selectedLabels.includes(btn.textContent.trim())) {
+                                            btn.classList.add('selected');
+                                            btn.style.display = '';
+                                        } else {
+                                            btn.classList.remove('selected');
+                                            btn.style.display = 'none';
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (typeof checkPharm === 'function') checkPharm();
+            }
+
+            updateLifestyleButtons();
+        }
+
+        function calculateOverallAdherence() {
+            const keys = Object.keys(adherenceState);
+            if (keys.length === 0) return;
+
+            const input = document.getElementById('obs-overall-adherence');
+            if (!input) return;
+
+            const hasMissed = keys.some(k => adherenceState[k] === 'Yes');
+
+            if (hasMissed) {
+                input.value = 'Poor';
+                input.style.color = '#d9534f';
+            } else {
+                input.value = 'Good';
+                input.style.color = '#5cb85c';
+            }
+
+            const row = document.getElementById('row-overall-adherence');
+            if (row) row.style.display = 'table-row';
+            updateLifestyleButtons();
+        }
+
+        function openAdherenceModal(drugName, iconElem, drugId) {
+            activeDrugIcon = iconElem;
+            currentModalDrugId = drugId;
+            document.getElementById('mmas-drug-name').innerText = drugName;
+
+            // Reset modal state
+            document.getElementById('btn-missed-yes').classList.remove('selected');
+            document.getElementById('btn-missed-no').classList.remove('selected');
+            document.getElementById('mmas4-questions').style.display = 'none';
+
+            document.querySelectorAll('.mmas-btn').forEach(b => b.classList.remove('selected'));
+
+            const modal = document.getElementById('mmas4-modal');
+            modal.style.display = 'flex';
+        }
+
+        function closeAdherenceModal() {
+            document.getElementById('mmas4-modal').style.display = 'none';
+        }
+
+        function setMissedDose(val) {
+            document.getElementById('btn-missed-yes').classList.remove('selected');
+            document.getElementById('btn-missed-no').classList.remove('selected');
+
+            if (val === 'Yes') {
+                document.getElementById('btn-missed-yes').classList.add('selected');
+                document.getElementById('mmas4-questions').style.display = 'block';
+            } else {
+                document.getElementById('btn-missed-no').classList.add('selected');
+                document.getElementById('mmas4-questions').style.display = 'none';
+            }
+        }
+
+        function toggleModalBtn(btn, qClass) {
+            document.querySelectorAll(`.${qClass}`).forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        function saveAdherenceModal() {
+            const isYes = document.getElementById('btn-missed-yes').classList.contains('selected');
+            const isNo = document.getElementById('btn-missed-no').classList.contains('selected');
+
+            if (isYes) adherenceState[currentModalDrugId] = 'Yes';
+            else if (isNo) adherenceState[currentModalDrugId] = 'No';
+
+            if (activeDrugIcon && (isYes || isNo)) {
+                activeDrugIcon.style.color = 'green';
+                activeDrugIcon.classList.remove('adherence-btn');
+                activeDrugIcon.innerHTML = '✅';
+                activeDrugIcon.title = 'Adherence Evaluated';
+            }
+
+            calculateOverallAdherence();
+            closeAdherenceModal();
+        }
+
+        // Hide dropdowns when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('active'));
+            }
+            if (!e.target.closest('#appointment-date-field')) {
+                const picker = document.getElementById('appointment-picker');
+                if (picker) picker.classList.remove('active');
+            }
+        });
+
+
+        // --- Normal Form Logic ---
+        // Toggle Buttons Function
+        // allowMultiple = true means checkboxes, allowMultiple = false means radio buttons
+        function toggleBtn(btn, allowMultiple = false) {
+            const group = btn.parentElement;
+            if (!allowMultiple) {
+                // Radio button logic: unselect all others in this group
+                const allBtns = group.querySelectorAll('.bahmni-btn');
+                allBtns.forEach(b => {
+                    if (b !== btn) b.classList.remove('selected');
+                });
+            }
+            // Toggle the clicked button
+            btn.classList.toggle('selected');
+        }
+
+        // Auto-calculate BMI & WHO Grading
+        function autoCalculateBMI() {
+            const wStr = document.getElementById('obs-weight').value;
+            const hStr = document.getElementById('obs-height').value;
+
+            const w = parseFloat(wStr);
+            const h_cm = parseFloat(hStr);
+
+            const rowBmi = document.getElementById('row-bmi');
+            const rowGrade = document.getElementById('row-bmi-zscore');
+            const inputBmi = document.getElementById('obs-bmi');
+            const inputGrade = document.getElementById('obs-bmi-grading');
+
+            if (!isNaN(w) && !isNaN(h_cm) && h_cm > 0 && w > 0) {
+                const h_m = h_cm / 100;
+                const bmi = w / (h_m * h_m);
+                inputBmi.value = bmi.toFixed(2);
+
+                let grade = "";
+                let color = "";
+
+                if (bmi < 16.0) {
+                    grade = "Severe Thinness";
+                    color = "#d9534f"; // Red
+                } else if (bmi < 17.0) {
+                    grade = "Moderate Thinness";
+                    color = "#d9534f"; // Red
+                } else if (bmi < 18.5) {
+                    grade = "Mild Thinness";
+                    color = "#f0ad4e"; // Orange
+                } else if (bmi < 25.0) {
+                    grade = "Normal";
+                    color = "#5cb85c"; // Green
+                } else if (bmi < 30.0) {
+                    grade = "Pre-Obesity (Overweight)";
+                    color = "#f0ad4e"; // Orange
+                } else if (bmi < 35.0) {
+                    grade = "Obesity Class I (Moderate)";
+                    color = "#d9534f"; // Red
+                } else if (bmi < 40.0) {
+                    grade = "Obesity Class II (Severe)";
+                    color = "#d9534f"; // Red
+                } else {
+                    grade = "Obesity Class III (Morbid)";
+                    color = "#d9534f"; // Red
+                }
+
+                inputGrade.value = grade;
+                inputGrade.style.color = color;
+
+                if (rowBmi) rowBmi.style.display = 'table-row';
+                if (rowGrade) rowGrade.style.display = 'table-row';
+                updateLifestyleButtons();
+            } else {
+                if (rowBmi) rowBmi.style.display = 'none';
+                if (rowGrade) rowGrade.style.display = 'none';
+                if (inputBmi) inputBmi.value = "";
+                if (inputGrade) inputGrade.value = "";
+                updateLifestyleButtons();
+            }
+        }
+
+        // Auto-calculate Waist Metabolic Risk
+        function autoCalculateWaistRisk() {
+            const wStr = document.getElementById('obs-waist').value.trim();
+            const waist = parseFloat(wStr);
+            const gender = patientDemographics.gender || 'F';
+
+            const rowRisk = document.getElementById('row-metabolic-risk');
+            const inputRisk = document.getElementById('obs-metabolic-risk');
+            const hintRisk = document.getElementById('hint-metabolic-risk');
+
+            if (!isNaN(waist) && waist > 0) {
+                let riskTxt = "";
+                let hintTxt = "";
+                let color = "";
+
+                if (gender === 'M') {
+                    if (waist <= 94) {
+                        riskTxt = "Normal Risk";
+                        hintTxt = "Low risk of metabolic conditions.";
+                        color = "#5cb85c";
+                    } else if (waist <= 102) {
+                        riskTxt = "Increased Risk";
+                        hintTxt = "Early indicator for necessary weight management.";
+                        color = "#f0ad4e";
+                    } else {
+                        riskTxt = "Greatly Increased Risk";
+                        hintTxt = "Strong link to cardiovascular disease and type 2 diabetes.";
+                        color = "#d9534f";
+                    }
+                } else {
+                    if (waist <= 80) {
+                        riskTxt = "Normal Risk";
+                        hintTxt = "Low risk of metabolic conditions.";
+                        color = "#5cb85c";
+                    } else if (waist <= 88) {
+                        riskTxt = "Increased Risk";
+                        hintTxt = "Early indicator for necessary weight management.";
+                        color = "#f0ad4e";
+                    } else {
+                        riskTxt = "Greatly Increased Risk";
+                        hintTxt = "Strong link to cardiovascular disease and type 2 diabetes.";
+                        color = "#d9534f";
+                    }
+                }
+
+                inputRisk.value = riskTxt;
+                inputRisk.style.color = color;
+                hintRisk.innerText = hintTxt + " (" + (gender === 'M' ? "Male" : "Female") + " markers)";
+                if (rowRisk) rowRisk.style.display = 'table-row';
+            } else {
+                if (rowRisk) rowRisk.style.display = 'none';
+                if (inputRisk) inputRisk.value = '';
+                if (hintRisk) hintRisk.innerText = '';
+            }
+        }
+        // Toggle 24-hr Urine Protein visibility based on Albumin value
+        function toggleUrineProtein() {
+            const albumin = document.getElementById('obs-albumin').value;
+            const row = document.getElementById('row-urine-protein');
+            const input = document.getElementById('obs-urine-prof');
+            if (['2+', '3+', '4+'].includes(albumin)) {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+                if (input) input.value = '';
+            }
+        }
+
+        // Show/Hide lifestyle buttons based on selected risk factor pills, BMI, and adherence
+        function updateComorbStatusVisibility() {
+            const row = document.getElementById('row-comorb-status');
+            const select = document.getElementById('obs-comorb-status');
+            const hasComorbEntry = document.querySelectorAll('#pill-box-comorb .pill').length > 0;
+
+            if (!row) return;
+
+            row.style.display = hasComorbEntry ? 'table-row' : 'none';
+            if (!hasComorbEntry && select) select.value = '';
+        }
+
+        function toggleEntryLinkedRow(parentId, rowId, childId) {
+            const parent = document.getElementById(parentId);
+            const row = document.getElementById(rowId);
+            const child = document.getElementById(childId);
+            const hasEntry = parent && parent.value.trim().length > 0;
+
+            if (!row) return;
+
+            row.style.display = hasEntry ? 'table-row' : 'none';
+            if (!hasEntry && child) child.value = '';
+        }
+
+        const ethiopianMonths = [
+            'Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 'Tir', 'Yekatit',
+            'Megabit', 'Miazia', 'Ginbot', 'Sene', 'Hamle', 'Nehasie', 'Pagume'
+        ];
+        const appointmentPickerState = { year: null, month: null, selected: null };
+        const fixedEthiopianFullHolidays = [
+            { month: 1, day: 1, name: 'Ethiopian New Year', description: 'Full public holiday marking the start of the Ethiopian calendar year.' },
+            { month: 1, day: 17, name: 'Meskel', description: 'Full public holiday commemorating the Finding of the True Cross.' },
+            { month: 4, day: 29, name: 'Ethiopian Christmas', description: 'Full public holiday for Genna, Ethiopian Orthodox Christmas.' },
+            { month: 5, day: 11, name: 'Timket', description: 'Full public holiday celebrating Epiphany.' },
+            { month: 6, day: 23, name: 'Adwa Victory Day', description: 'Full public holiday commemorating the Victory of Adwa.' },
+            { month: 8, day: 27, name: 'Patriots Victory Day', description: 'Full public holiday honoring Ethiopian patriots and liberation.' },
+            { month: 9, day: 1, name: 'International Labour Day', description: 'Full public holiday for Labour Day.' },
+            { month: 9, day: 20, name: 'Downfall of the Derg', description: 'Full public holiday commemorating the end of the Derg regime.' }
+        ];
+        const configuredGregorianFullHolidays = {
+            '2026-03-20': { name: 'Eid al-Fitr', description: 'Configured full public holiday marking the end of Ramadan.' },
+            '2026-04-10': { name: 'Siklet / Ethiopian Good Friday', description: 'Configured full public holiday for Ethiopian Orthodox Good Friday.' },
+            '2026-04-12': { name: 'Fasika / Ethiopian Easter', description: 'Configured full public holiday for Ethiopian Orthodox Easter.' },
+            '2026-05-27': { name: 'Eid al-Adha', description: 'Configured full public holiday for the Feast of Sacrifice.' },
+            '2026-08-25': { name: 'Mawlid', description: 'Configured full public holiday observing the Prophet Muhammad birthday.' }
+        };
+
+        function isGregorianLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        }
+
+        function getEthiopianYearStart(ethiopianYear) {
+            const gregorianYear = ethiopianYear + 7;
+            const newYearDay = isGregorianLeapYear(ethiopianYear + 8) ? 12 : 11;
+            return new Date(gregorianYear, 8, newYearDay);
+        }
+
+        function addDays(date, days) {
+            const newDate = new Date(date);
+            newDate.setDate(newDate.getDate() + days);
+            return newDate;
+        }
+
+        function getEthiopianMonthLength(year, month) {
+            if (month < 13) return 30;
+            return year % 4 === 3 ? 6 : 5;
+        }
+
+        function ethiopianToGregorian(year, month, day) {
+            const start = getEthiopianYearStart(year);
+            return addDays(start, ((month - 1) * 30) + day - 1);
+        }
+
+        function gregorianToEthiopian(gregorianDate) {
+            let year = gregorianDate.getFullYear() - 8;
+            if (gregorianDate >= getEthiopianYearStart(year + 1)) year++;
+            if (gregorianDate < getEthiopianYearStart(year)) year--;
+
+            const start = getEthiopianYearStart(year);
+            const diffDays = Math.floor((gregorianDate - start) / 86400000);
+            return {
+                year: year,
+                month: Math.floor(diffDays / 30) + 1,
+                day: (diffDays % 30) + 1
+            };
+        }
+
+        function formatGregorianDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function getAppointmentHoliday(year, month, day) {
+            const gregorianDate = ethiopianToGregorian(year, month, day);
+            const fixedHoliday = fixedEthiopianFullHolidays.find(h => h.month === month && h.day === day);
+            const movableHoliday = configuredGregorianFullHolidays[formatGregorianDate(gregorianDate)];
+
+            return fixedHoliday || movableHoliday || null;
+        }
+
+        function getAppointmentInactiveReason(year, month, day) {
+            const gregorianDate = ethiopianToGregorian(year, month, day);
+            const weekday = gregorianDate.getDay();
+            const holiday = getAppointmentHoliday(year, month, day);
+            const today = gregorianToEthiopian(new Date());
+
+            if (holiday) return { type: 'holiday', text: `Full holiday: ${holiday.name}. ${holiday.description}` };
+            if (weekday === 0) return { type: 'weekend', text: 'Weekend: Sunday is inactive' };
+            if (weekday === 6) return { type: 'weekend', text: 'Weekend: Saturday is inactive' };
+
+            if (year < today.year ||
+                (year === today.year && month < today.month) ||
+                (year === today.year && month === today.month && day < today.day)) {
+                return { type: 'past', text: 'Past date is inactive' };
+            }
+
+            return null;
+        }
+
+        function initAppointmentPicker() {
+            const today = gregorianToEthiopian(new Date());
+            appointmentPickerState.year = today.year;
+            appointmentPickerState.month = today.month;
+            renderAppointmentPicker();
+        }
+
+        function toggleAppointmentPicker(forceOpen, event) {
+            if (event) event.stopPropagation();
+            const picker = document.getElementById('appointment-picker');
+            if (!picker) return;
+
+            if (forceOpen === true) {
+                picker.classList.add('active');
+            } else {
+                picker.classList.toggle('active');
+            }
+            renderAppointmentPicker();
+        }
+
+        function changeAppointmentMonth(delta, event) {
+            if (event) event.stopPropagation();
+            appointmentPickerState.month += delta;
+            if (appointmentPickerState.month < 1) {
+                appointmentPickerState.month = 13;
+                appointmentPickerState.year--;
+            }
+            if (appointmentPickerState.month > 13) {
+                appointmentPickerState.month = 1;
+                appointmentPickerState.year++;
+            }
+            renderAppointmentPicker();
+        }
+
+        function selectAppointmentDate(year, month, day, event) {
+            if (event) event.stopPropagation();
+            const input = document.getElementById('obs-appointment');
+            const gregorianInput = document.getElementById('obs-appointment-gregorian');
+            const note = document.getElementById('appointment-date-note');
+            const gregorianDate = ethiopianToGregorian(year, month, day);
+            const gregorianValue = formatGregorianDate(gregorianDate);
+
+            appointmentPickerState.selected = { year, month, day };
+            input.value = `${ethiopianMonths[month - 1]} ${day}, ${year} E.C.`;
+            if (gregorianInput) gregorianInput.value = gregorianValue;
+            if (note) note.innerText = `Selected ${input.value} (${gregorianValue} G.C.). Weekends and full holidays are inactive.`;
+            document.getElementById('appointment-picker').classList.remove('active');
+            renderAppointmentPicker();
+        }
+
+        function renderAppointmentPicker() {
+            const picker = document.getElementById('appointment-picker');
+            if (!picker || !appointmentPickerState.year || !appointmentPickerState.month) return;
+
+            const year = appointmentPickerState.year;
+            const month = appointmentPickerState.month;
+            const daysInMonth = getEthiopianMonthLength(year, month);
+            const firstWeekday = ethiopianToGregorian(year, month, 1).getDay();
+            const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const visibleHolidays = [];
+            const today = gregorianToEthiopian(new Date());
+            const prevDisabled = year < today.year || (year === today.year && month <= today.month);
+
+            let html = `
+                <div class="ethiopian-picker-header">
+                    <button type="button" onclick="changeAppointmentMonth(-1, event)" title="Previous month" ${prevDisabled ? 'disabled' : ''}>&lt;</button>
+                    <span class="ethiopian-picker-title">${ethiopianMonths[month - 1]} ${year} E.C.</span>
+                    <button type="button" onclick="changeAppointmentMonth(1, event)" title="Next month">&gt;</button>
+                </div>
+                <div class="ethiopian-picker-grid">
+            `;
+
+            weekdays.forEach(day => {
+                html += `<div class="ethiopian-picker-weekday">${day}</div>`;
+            });
+
+            for (let blank = 0; blank < firstWeekday; blank++) {
+                html += '<span></span>';
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const holiday = getAppointmentHoliday(year, month, day);
+                if (holiday) visibleHolidays.push({ ...holiday, day });
+                const inactive = getAppointmentInactiveReason(year, month, day);
+                const selected = appointmentPickerState.selected &&
+                    appointmentPickerState.selected.year === year &&
+                    appointmentPickerState.selected.month === month &&
+                    appointmentPickerState.selected.day === day;
+                const classes = [
+                    'ethiopian-picker-day',
+                    selected ? 'selected' : '',
+                    inactive ? inactive.type : ''
+                ].filter(Boolean).join(' ');
+                const disabled = inactive ? 'disabled' : '';
+                const title = inactive ? inactive.text : `Select ${ethiopianMonths[month - 1]} ${day}, ${year} E.C.`;
+                const click = inactive ? '' : `onclick="selectAppointmentDate(${year}, ${month}, ${day}, event)"`;
+
+                html += `<button type="button" class="${classes}" ${disabled} ${click} title="${title}">${day}</button>`;
+            }
+
+            const holidayHtml = visibleHolidays.length > 0
+                ? `
+                    <div class="ethiopian-picker-holidays">
+                        Full holidays:
+                        ${visibleHolidays.map(holiday => `
+                            <span class="ethiopian-picker-holiday-name" title="${escapeHtml(holiday.description)}">
+                                ${escapeHtml(holiday.name)} (${holiday.day})
+                            </span>
+                        `).join('')}
+                    </div>
+                `
+                : '';
+
+            html += `
+                </div>
+                ${holidayHtml}
+                <div class="ethiopian-picker-note">
+                    Inactive dates are not selectable. Grey dates are weekends; red dates are configured full holidays.
+                </div>
+            `;
+            picker.innerHTML = html;
+        }
+
+        function updateLifestyleButtons() {
+            updateComorbStatusVisibility();
+
+            const pills = document.querySelectorAll('#pill-box-risks .pill');
+            const riskValues = Array.from(pills).map(p => p.dataset.val);
+            const comorbPills = document.querySelectorAll('#pill-box-comorb .pill');
+            const comorbValues = Array.from(comorbPills).map(p => p.dataset.val);
+            const bmiStr = document.getElementById('obs-bmi').value;
+            const bmi = parseFloat(bmiStr);
+            const adherence = document.getElementById('obs-overall-adherence');
+            const adherenceVal = adherence ? adherence.value : '';
+            const dmType = document.getElementById('search-dm').value.trim();
+
+            document.querySelectorAll('#treatment-life-style-btns .risk-linked').forEach(btn => {
+                const triggers = (btn.dataset.risks || '').split(/\s*,\s*/);
+                const minBmi = btn.dataset.minBmi ? parseFloat(btn.dataset.minBmi) : null;
+                const showOnAdherence = btn.dataset.showOnAdherence || '';
+                const showOnField = btn.dataset.showOnField || '';
+                const showOnDm = btn.dataset.showOnDm || '';
+                const showOnComorb = (btn.dataset.showOnComorb || '').split(/\s*,\s*/);
+
+                let shouldShow = false;
+                if (triggers.length > 0 && triggers[0] !== '') {
+                    shouldShow = triggers.some(t => riskValues.includes(t));
+                }
+                if (minBmi !== null && !isNaN(bmi)) {
+                    shouldShow = bmi >= minBmi;
+                }
+                if (showOnAdherence && adherenceVal === showOnAdherence) {
+                    shouldShow = true;
+                }
+                if (showOnField) {
+                    const field = document.getElementById(showOnField);
+                    shouldShow = field && field.value.trim().length > 0;
+                }
+                if (showOnDm && dmType === showOnDm) {
+                    shouldShow = true;
+                }
+                if (showOnComorb.length > 0 && showOnComorb[0] !== '') {
+                    if (showOnComorb.some(c => comorbValues.includes(c))) {
+                        shouldShow = true;
+                    }
+                }
+                btn.style.display = shouldShow ? 'block' : 'none';
+                if (!shouldShow) btn.classList.remove('selected');
+            });
+        }
+
+        // Auto-compute HTN status based on BP < 140/90
+        function autoCalculateHTNStatus() {
+            const sbpStr = document.getElementById('obs-sbp').value.trim();
+            const dbpStr = document.getElementById('obs-dbp').value.trim();
+            const select = document.getElementById('htn-status');
+            const row = document.getElementById('row-htn-status');
+
+            if (!select || !row) return;
+
+            select.value = '';
+
+            if (sbpStr || dbpStr) {
+                row.style.display = 'table-row';
+                const sbp = parseInt(sbpStr);
+                const dbp = parseInt(dbpStr);
+                if (!isNaN(sbp) && !isNaN(dbp) && sbp < 140 && dbp < 90) {
+                    select.value = 'Controlled';
+                } else if (!isNaN(sbp) && !isNaN(dbp)) {
+                    select.value = 'Uncontrolled';
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        }
+
+        // Auto-compute DM status based on HGA1C, FBS, and RBS
+        function autoCalculateDMStatus() {
+            const hga1cStr = document.getElementById('obs-hga1c').value.trim();
+            const fbsStr = document.getElementById('obs-fbs').value.trim();
+            const rbsStr = document.getElementById('obs-rbs').value.trim();
+            const select = document.getElementById('dm-status');
+            const row = document.getElementById('row-dm-status');
+
+            if (!select || !row) return;
+
+            let hasData = false;
+            let isControlled = false;
+
+            if (hga1cStr) {
+                const hga1c = parseFloat(hga1cStr);
+                if (!isNaN(hga1c)) {
+                    hasData = true;
+                    if (hga1c < 7) {
+                        isControlled = true;
+                    } else if (hga1c >= 7 && hga1c <= 8) {
+                        const fbs = parseFloat(fbsStr);
+                        if (!isNaN(fbs) && fbs <= 125) {
+                            isControlled = true;
+                        }
+                    }
+                }
+            }
+
+            if (!hga1cStr) {
+                if (fbsStr) {
+                    const fbs = parseFloat(fbsStr);
+                    if (!isNaN(fbs)) {
+                        hasData = true;
+                        if (fbs <= 125) isControlled = true;
+                    }
+                }
+                if (!isControlled && rbsStr) {
+                    const rbs = parseFloat(rbsStr);
+                    if (!isNaN(rbs)) {
+                        hasData = true;
+                        if (rbs < 200) isControlled = true;
+                    }
+                }
+            }
+
+            if (hasData) {
+                row.style.display = 'table-row';
+                select.value = isControlled ? 'Controlled' : 'Uncontrolled';
+            } else {
+                row.style.display = 'none';
+                select.value = '';
+            }
+        }
+    </script>
+
+    <!-- MMAS-4 Adherence Modal -->
+    <div id="mmas4-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div
+            style="background:#fff; padding:20px; width:450px; border-radius:4px; box-shadow:0 2px 10px rgba(0,0,0,0.2);">
+            <h3
+                style="margin-top:0; color:var(--bahmni-blue); border-bottom:1px solid #ddd; padding-bottom:10px; font-size:16px;">
+                Adherence: <span id="mmas-drug-name"></span></h3>
+
+            <div
+                style="margin-bottom:15px; background:#f9f9f9; padding:15px; border:1px solid #eee; border-radius:4px;">
+                <strong style="font-size:14px; color:#333;">Missed Dose?</strong>
+                <div class="btn-group" style="flex-direction:row; gap:10px; margin-top:8px;">
+                    <button type="button" class="bahmni-btn modal-btn" id="btn-missed-yes"
+                        onclick="setMissedDose('Yes')">Yes</button>
+                    <button type="button" class="bahmni-btn modal-btn" id="btn-missed-no"
+                        onclick="setMissedDose('No')">No</button>
+                </div>
+            </div>
+
+            <div id="mmas4-questions" style="display:none;">
+                <p
+                    style="font-size:13px; color:#666; margin-bottom:15px; padding-bottom:5px; border-bottom:1px solid #e0e0e0;">
+                    <i>Please answer the following MMAS-4 questions:</i></p>
+
+                <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:13px; color:#444;">1. Forgetfulness</label>
+                    <div class="btn-group" style="flex-direction:row; gap:10px; width:120px;">
+                        <button type="button" class="bahmni-btn mmas-btn q1"
+                            onclick="toggleModalBtn(this, 'q1')">Yes</button>
+                        <button type="button" class="bahmni-btn mmas-btn q1"
+                            onclick="toggleModalBtn(this, 'q1')">No</button>
+                    </div>
+                </div>
+                <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:13px; color:#444;">2. Carelessness</label>
+                    <div class="btn-group" style="flex-direction:row; gap:10px; width:120px;">
+                        <button type="button" class="bahmni-btn mmas-btn q2"
+                            onclick="toggleModalBtn(this, 'q2')">Yes</button>
+                        <button type="button" class="bahmni-btn mmas-btn q2"
+                            onclick="toggleModalBtn(this, 'q2')">No</button>
+                    </div>
+                </div>
+                <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:13px; color:#444;">3. Feeling Better</label>
+                    <div class="btn-group" style="flex-direction:row; gap:10px; width:120px;">
+                        <button type="button" class="bahmni-btn mmas-btn q3"
+                            onclick="toggleModalBtn(this, 'q3')">Yes</button>
+                        <button type="button" class="bahmni-btn mmas-btn q3"
+                            onclick="toggleModalBtn(this, 'q3')">No</button>
+                    </div>
+                </div>
+                <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:13px; color:#444;">4. Feeling Worse</label>
+                    <div class="btn-group" style="flex-direction:row; gap:10px; width:120px;">
+                        <button type="button" class="bahmni-btn mmas-btn q4"
+                            onclick="toggleModalBtn(this, 'q4')">Yes</button>
+                        <button type="button" class="bahmni-btn mmas-btn q4"
+                            onclick="toggleModalBtn(this, 'q4')">No</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:25px; text-align:right;">
+                <button type="button" class="bahmni-btn" onclick="closeAdherenceModal()"
+                    style="margin-right:10px;">Cancel</button>
+                <button type="button" class="btn-save" onclick="saveAdherenceModal()" style="padding:6px 20px;">Save
+                    Response</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
