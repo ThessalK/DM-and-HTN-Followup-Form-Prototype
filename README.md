@@ -30,8 +30,9 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 8. [Ethiopian Date Picker](#ethiopian-date-picker)
 9. [Pediatric BP Classification (AAP 2017)](#pediatric-bp-classification-aap-2017)
 10. [Hypotensive Detection](#hypotensive-detection)
-11. [Mobile Responsiveness](#mobile-responsiveness)
-12. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
+11. [CVD Risk (WHO/ISH 2014)](#cvd-risk-whoish-2014)
+12. [Mobile Responsiveness](#mobile-responsiveness)
+13. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
 11. [Developer Notes](#developer-notes)
 
 ---
@@ -41,7 +42,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 | Aspect | Detail |
 |---|---|
 | **Stack** | HTML5 + CSS3 + Vanilla ES6 JavaScript (no frameworks, no build tools) |
-| **File** | Single file: `DM_HTN_Followup.html` (~3222 lines) |
+| **File** | Single file: `DM_HTN_Followup.html` (~3575 lines) |
 | **State** | Client-side only (no persistence layer; save creates in-memory DOM snapshot columns) |
 | **Calendar** | Ethiopian calendar (E.C.) with Gregorian conversion for the appointment picker |
 | **Mock Data** | Hardcoded `dictConcepts` array simulates OpenMRS concept search |
@@ -133,14 +134,15 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 | `obs-albumin` | Select (Nil/ Trace/ 1+– 4+) | 24-hr Urine Protein row shown on 2+/3+/4+ |
 | `obs-micro` | Textarea | Microscopic findings |
 | `obs-urine-prof` | Input (hidden row) | 24-hr Urine Protein |
-| `obs-creatinine` | Integer input | GFR + KDIGO Category |
+| `obs-creatinine` | Decimal input (allowDecimalInput) | GFR + KDIGO Category |
 | `obs-gfr` | Read-only (hidden row) | 2021 CKD-EPI equation |
 | `obs-gfr-kdigo` | Read-only (hidden row) | G1–G5 with color coding |
 | `obs-na` | Integer input | — |
 | `obs-k` | Integer input | — |
-| `obs-total-cholesterol` | Integer input | — |
+| `obs-total-cholesterol` | Integer input | CVD Risk (lab mode) |
 | `obs-triglyceride` | Integer input | — |
 | `obs-ldl` | Integer input | — |
+| `obs-cvd-risk` | Read-only badge (hidden row) | WHO/ISH 2014 CVD Risk (AFR-E) — shown when dyslipidemia-copy has value |
 | `obs-ecg` | Textarea | — |
 | `obs-echo` | Textarea | — |
 | `obs-fundoscopic` | Textarea | — |
@@ -210,6 +212,7 @@ This section contains the **current encounter treatment plan**. It is always vis
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
 | `autoCalculateGFR()` | Creatinine input | `obs-gfr` (2021 CKD-EPI) + `obs-gfr-kdigo` (G1–G5) |
 | `calculateOverallAdherence()` | MMAS-4 modal save | `obs-overall-adherence`: Good / Poor |
+| `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, demographics | `row-cvd-risk` badge: <10% (green) / 10–20% (yellow) / 20–30% (orange) / 30–40% (red) / ≥40% (dark red) |
 
 ### Validation Constraints
 
@@ -248,6 +251,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-htn-status` | SBP or DBP has a value |
 | `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
 | `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
+| `row-cvd-risk` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry) |
 | `row-pregnant` | Gender = F and age 15–45 |
 | `row-conceive` | Pregnant answer = "No" |
 | `row-overall-adherence` | Any pharmacologic field has content |
@@ -438,6 +442,75 @@ In `calculateHTNGrade()`, hypotensive is shown as a distinct label in the `obs-h
 
 ---
 
+## CVD Risk (WHO/ISH 2014)
+
+The form computes a 10-year cardiovascular disease risk estimate using the **WHO/ISH 2014 risk prediction charts** for the **AFR-E subregion** (Eastern Sub-Saharan Africa). This is a lookup-table-based service (not a formula), using the original CSV data from the `whoishRisk` R package.
+
+### Display
+
+A **CVD Risk** row (`row-cvd-risk`) appears below the LDL entry in the *Pertinent Lab Ix* section, showing a color-coded badge:
+
+| Risk Level | Badge Color |
+|---|---|
+| <10% | Green (`#4CAF50`) |
+| 10% to <20% | Yellow (`#FFC107`) |
+| 20% to <30% | Orange (`#FF9800`) |
+| 30% to <40% | Red (`#F44336`) |
+| ≥40% | Dark Red (`#B71C1C`) |
+
+### Visibility
+
+The row is hidden by default and appears only when the **Dyslipidemia** textarea (`obs-dyslipidemia-copy`) in the Treatment (Active Plan) section has a value.
+
+### Inputs and Modes
+
+The calculator supports two modes:
+
+| Mode | Condition | Additional Inputs |
+|---|---|---|
+| **Lab-based** | Total Cholesterol (`obs-total-cholesterol`) has a value ≥ 1 | TC value mapped to one of 5 cholesterol categories for lookup |
+| **Non-lab (BMI-based)** | Total Cholesterol is empty or 0 | Uses BMI (computed from weight & height) with the non-lab (chol=0) lookup column |
+
+**Common inputs** (required for both modes):
+
+| Input | Source | Notes |
+|---|---|---|
+| Age | `patientDemographics.age` | Must be 40–79 (lookup table range). Use Test Demographics section |
+| Sex | `patientDemographics.gender` | M = Male, F = Female. Use sex toggle |
+| SBP | `obs-sbp` | Categorical: <120, 120–129, 130–149, 150–169, ≥170 |
+| Diabetes | `search-dm` = "Type 2 Diabetes Mellitus" | dm=1 if exact match, else dm=0 |
+| Smoking | `#pill-box-risks` pills | Smoker if any pill text contains "tobacco" or "smok" (case-insensitive) |
+
+### Lookup Table
+
+The `WHO_AFRE` JavaScript object is a 5-level nested structure indexed by:
+- **dm** (0/1) → **gender** (0=F/1=M) → **smoker** (0/1) → **age group** (40/50/60/70) → **SBP category** (120/140/160/180) → **chol code** (0/4/5/6/7/8)
+
+Each cell contains a risk level (0–4) corresponding to the five band labels above.
+
+**Cholesterol code mapping:**
+| Code | TC Range (mg/dL) |
+|---|---|
+| 0 | Non-lab (no TC data) |
+| 4 | < 155 |
+| 5 | 155 – 189 |
+| 6 | 190 – 227 |
+| 7 | 228 – 266 |
+| 8 | ≥ 267 |
+
+### Trigger Events
+
+`calculateCVDRisk()` runs whenever any of these inputs change:
+- `obs-sbp` (SBP)
+- `obs-total-cholesterol` (TC — switches lab/non-lab mode)
+- `obs-weight` or `obs-height` (BMI for non-lab mode)
+- `search-dm` (diabetes status)
+- `pill-box-risks` pill add/remove (smoking status)
+- `obs-dyslipidemia-copy` (visibility gate)
+- Demographics age/sex change
+
+---
+
 ## Mobile Responsiveness
 
 | Breakpoint | Layout |
@@ -492,6 +565,7 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-na` | Sodium | Numeric |
 | `obs-k` | Potassium | Numeric |
 | `obs-total-cholesterol` | Total Cholesterol | Numeric |
+| `obs-cvd-risk` | CVD Risk (WHO/ISH) | Calculated |
 | `obs-triglyceride` | Triglyceride | Numeric |
 | `obs-ldl` | LDL | Numeric |
 | `obs-ecg` | ECG | Text |
