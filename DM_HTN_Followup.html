@@ -1329,7 +1329,7 @@
                     <tr>
                         <td class="label-cell">Creatinine</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-creatinine" data-min="1" data-max="15" oninput="allowOnlyInteger(this); autoCalculateGFR()">
+                            <input type="text" id="obs-creatinine" data-min="0.05" data-max="15" oninput="allowDecimalInput(this); autoCalculateGFR()">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -2361,6 +2361,14 @@
 
         function allowOnlyInteger(input) {
             input.value = input.value.replace(/[^0-9]/g, '');
+        }
+
+        function allowDecimalInput(input) {
+            input.value = input.value.replace(/[^0-9.]/g, '');
+            var parts = input.value.split('.');
+            if (parts.length > 2) {
+                input.value = parts[0] + '.' + parts.slice(1).join('');
+            }
         }
 
         function validateNumericRange(input) {

@@ -225,7 +225,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | FBS | 30 – 600 | `obs-fbs` |
 | RBS | 30 – 600 | `obs-rbs` |
 | HgA1c | 4 – 20 | `obs-hga1c` |
-| Creatinine | 1 – 15 | `obs-creatinine` (integer) |
+| Creatinine | 0.05 – 15 | `obs-creatinine` (decimal) |
 | Na+ | 70 – 200 | `obs-na` |
 | K+ | 1 – 10 | `obs-k` |
 
