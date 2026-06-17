@@ -908,17 +908,30 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="label-cell">Comorbidity/Complications</td>
+                        <td class="label-cell">Complications</td>
                         <td class="input-cell" style="overflow: visible;">
                             <div class="autocomplete-wrapper" style="max-width: 100%;">
-                                <!-- Keydown event added for Enter to add custom entries -->
+                                <input type="text" id="search-complic"
+                                    placeholder="Search and add complications..."
+                                    oninput="handleSearch(this, 'complic')" onfocus="handleSearch(this, 'complic')"
+                                    onkeydown="handleEnter(event, this, 'complic')">
+                                <div class="autocomplete-dropdown" id="dropdown-complic"></div>
+                                <div class="pill-container" id="pill-box-complic"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Comorbidity</td>
+                        <td class="input-cell" style="overflow: visible;">
+                            <div class="autocomplete-wrapper" style="max-width: 100%;">
                                 <input type="text" id="search-comorb"
-                                    placeholder="Search and add multiple comorbidities..."
+                                    placeholder="Search and add comorbidities..."
                                     oninput="handleSearch(this, 'comorb')" onfocus="handleSearch(this, 'comorb')"
                                     onkeydown="handleEnter(event, this, 'comorb')">
                                 <div class="autocomplete-dropdown" id="dropdown-comorb"></div>
                                 <div class="pill-container" id="pill-box-comorb"></div>
                             </div>
+                            <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
 
@@ -1399,8 +1412,22 @@
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
+                    <tr id="row-complic-status" style="display: none;">
+                        <td class="label-cell">Complication Status</td>
+                        <td class="input-cell">
+                            <select id="obs-complic-status" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
+                                <option value=""></option>
+                                <option value="Same">Same</option>
+                                <option value="Corrected">Corrected</option>
+                                <option value="Controlled">Controlled</option>
+                                <option value="Uncontrolled">Uncontrolled</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
                     <tr id="row-comorb-status" style="display: none;">
-                        <td class="label-cell">Comorbidity/Complication(s)</td>
+                        <td class="label-cell">Comorbidity Status</td>
                         <td class="input-cell">
                             <select id="obs-comorb-status" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
                                 <option value=""></option>
@@ -1618,7 +1645,8 @@
         const dictConcepts = {
             'dm': ['Type 1 Diabetes Mellitus', 'Type 2 Diabetes Mellitus', 'Gestational (GDM)', 'MODY', 'Other Secondaries'],
             'htn': ['Essential (Primary) Hypertension', 'Secondary Hypertension'],
-            'comorb': ['Diabetic Retinopathy', 'Diabetic Neuropathy', 'Diabetic Nephropathy', 'Diabetic Foot Ulcer', 'DKA (Diabetic Ketoacidosis)', 'HHS (Hyperosmolar Hyperglycemic State)', 'CKD (Chronic Kidney Disease)', 'Old Ischemic Stroke', 'Old Hemorrhagic stroke', 'HHD', 'PAD', 'Erectile dysfunction', 'Diabetic Amputation', 'BPH(Benign Prostatic Hyperplasia)', 'Gouty Arthritis', 'ET(Essential Tremor)', 'Parkinson\'s Disease', 'RVI(Retroviral Infection)', 'Bronchial Asthma', 'COPD', 'TMNG', 'Epilepsy', 'MDD'],
+            'comorb': ['BPH (Benign Prostatic Hyperplasia)', 'Gouty Arthritis', 'ET (Essential Tremor)', "Parkinson's Disease", 'RVI (Retroviral Infection)', 'Bronchial Asthma', 'COPD', 'TMNG (Toxic Multinodular Goiter)', 'Epilepsy', 'MDD (Major Depressive Disorder)'],
+            'complic': ['Diabetic Retinopathy', 'Diabetic Neuropathy', 'Diabetic Nephropathy', 'CKD (Chronic Kidney Disease)', 'HHD (Hypertensive Heart Disease)', 'PAD (Peripheral Artery Disease)', 'Diabetic Foot Ulcer', 'DKA (Diabetic Ketoacidosis)', 'HHS (Hyperosmolar Hyperglycemic State)', 'Old Ischemic Stroke', 'Old Hemorrhagic Stroke', 'Erectile Dysfunction', 'Diabetic Amputation'],
             'risks': ['Tobacco Use', 'Physical Inactivity', 'Excessive Alcohol Consumption', 'Poor Dietary Adherence', 'Khat Chewing']
         };
 
@@ -1640,7 +1668,7 @@
 
                     // Click event for the option
                     div.onclick = function () {
-                        if (type === 'comorb' || type === 'risks') {
+                        if (type === 'comorb' || type === 'complic' || type === 'risks') {
                             // Multi-select creates a pill
                             addPill(`pill-box-${type}`, opt);
                             inputElem.value = ''; // clear search field
@@ -1696,7 +1724,7 @@
             `;
             container.appendChild(pill);
 
-            if (containerId === 'pill-box-risks' || containerId === 'pill-box-comorb') {
+            if (containerId === 'pill-box-risks' || containerId === 'pill-box-comorb' || containerId === 'pill-box-complic') {
                 updateLifestyleButtons();
             }
         }
@@ -1708,7 +1736,7 @@
 
                 const val = inputElem.value.trim();
                 // For multi-select, enter commits custom pill directly
-                if (val && (type === 'comorb' || type === 'risks')) {
+                if (val && (type === 'comorb' || type === 'complic' || type === 'risks')) {
                     addPill(`pill-box-${type}`, val);
                     inputElem.value = ''; // Reset input
 
@@ -2732,14 +2760,21 @@
 
         // Show/Hide lifestyle buttons based on selected risk factor pills, BMI, and adherence
         function updateComorbStatusVisibility() {
-            const row = document.getElementById('row-comorb-status');
-            const select = document.getElementById('obs-comorb-status');
-            const hasComorbEntry = document.querySelectorAll('#pill-box-comorb .pill').length > 0;
+            var rowComorb = document.getElementById('row-comorb-status');
+            var selectComorb = document.getElementById('obs-comorb-status');
+            var hasComorb = document.querySelectorAll('#pill-box-comorb .pill').length > 0;
+            if (rowComorb) {
+                rowComorb.style.display = hasComorb ? 'table-row' : 'none';
+                if (!hasComorb && selectComorb) selectComorb.value = '';
+            }
 
-            if (!row) return;
-
-            row.style.display = hasComorbEntry ? 'table-row' : 'none';
-            if (!hasComorbEntry && select) select.value = '';
+            var rowComplic = document.getElementById('row-complic-status');
+            var selectComplic = document.getElementById('obs-complic-status');
+            var hasComplic = document.querySelectorAll('#pill-box-complic .pill').length > 0;
+            if (rowComplic) {
+                rowComplic.style.display = hasComplic ? 'table-row' : 'none';
+                if (!hasComplic && selectComplic) selectComplic.value = '';
+            }
         }
 
         function toggleEntryLinkedRow(parentId, rowId, childId) {
@@ -2987,7 +3022,7 @@
 
             const pills = document.querySelectorAll('#pill-box-risks .pill');
             const riskValues = Array.from(pills).map(p => p.dataset.val);
-            const comorbPills = document.querySelectorAll('#pill-box-comorb .pill');
+            const comorbPills = document.querySelectorAll('#pill-box-comorb .pill, #pill-box-complic .pill');
             const comorbValues = Array.from(comorbPills).map(p => p.dataset.val);
             const bmiStr = document.getElementById('obs-bmi').value;
             const bmi = parseFloat(bmiStr);

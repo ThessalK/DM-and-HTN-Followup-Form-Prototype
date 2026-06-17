@@ -53,12 +53,12 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 ### Diagnosis Categories
 
 | Field ID | Type | Behavior |
-|---|---|---|
+|---|---|---|---|
 | `search-dm` | Autocomplete input | Single-select from `dictConcepts.dm`. Triggers `updateLifestyleButtons()` on change |
 | `search-htn` | Autocomplete input | Single-select from `dictConcepts.htn` |
 | `obs-htn-grade` | Read-only input | Auto-calculated from SBP/DBP values. Hidden row (`row-htn-grade`) shown only when BP entered |
-| `search-comorb` | Autocomplete + pills | Multi-select from `dictConcepts.comorb`. Custom entries via Enter key. Pills rendered in `#pill-box-comorb` |
-| `obs-comorb-status` | Select dropdown | Shown only when comorbidity pills exist. Options: Same, Corrected, Controlled, Uncontrolled, Unknown |
+| `search-complic` | Autocomplete + pills | Multi-select from `dictConcepts.complic` (DM/HTN complications). Pills in `#pill-box-complic` |
+| `search-comorb` | Autocomplete + pills | Multi-select from `dictConcepts.comorb` (other comorbidities). Pills in `#pill-box-comorb` |
 
 ### Treatment Given (Hidden / Copy-Only)
 
@@ -148,10 +148,11 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 ### Disease Outcome
 
 | Field ID | Type | Visibility |
-|---|---|---|
+|---|---|---|---|
 | `dm-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when FBS/RBS/HgA1c has data |
 | `htn-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when SBP/DBP has data |
-| `obs-comorb-status` | Select (Same/Corrected/Controlled/Uncontrolled/Unknown) | Shown when comorbidity pills exist |
+| `obs-complic-status` | Select (Same/Corrected/Controlled/Uncontrolled/Unknown) | Shown only when complication pills exist |
+| `obs-comorb-status` | Select (Same/Corrected/Controlled/Uncontrolled/Unknown) | Shown only when comorbidity pills exist |
 
 ### Treatment (Active Plan)
 
@@ -223,7 +224,8 @@ This section contains the **current encounter treatment plan**. It is always vis
 | `row-gfr`, `row-gfr-kdigo` | Creatinine has a value |
 | `row-dm-status` | FBS, RBS, or HgA1c has a value |
 | `row-htn-status` | SBP or DBP has a value |
-| `row-comorb-status` | Any comorbidity pills exist |
+| `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
+| `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
 | `row-pregnant` | Gender = F and age 15–45 |
 | `row-conceive` | Pregnant answer = "No" |
 | `row-overall-adherence` | Any pharmacologic field has content |
@@ -245,7 +247,7 @@ In the active Treatment section (`#treatment-life-style-btns`), buttons with cla
 | `data-show-on-adherence` | Show if adherence value matches (e.g. "Poor") |
 | `data-show-on-field` | Show if specified field ID has content |
 | `data-show-on-dm` | Show if DM type matches |
-| `data-show-on-comorb` | Show if any listed comorbidity pill exists in `#pill-box-comorb` |
+| `data-show-on-comorb` | Show if any listed condition pill exists in `#pill-box-comorb` or `#pill-box-complic` |
 
 Buttons hide automatically when conditions are no longer met.
 
@@ -434,7 +436,8 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `search-dm` | Type of DM | Coded |
 | `search-htn` | Type of HTN | Coded |
 | `obs-htn-grade` | HTN Grade | Text |
-| `search-comorb` | Comorbidity/Complication(s) | Multi-select Coded |
+| `search-complic` | Complication(s) | Multi-select Coded |
+| `search-comorb` | Comorbidity | Multi-select Coded |
 | `obs-oral-bg-drugs` | Oral Hypoglycemic Drugs | Text |
 | `obs-dm-insulin` | DM (Insulin) | Text |
 | `obs-htn-treatment` | HTN Treatment | Text |
@@ -474,6 +477,7 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-overall-assessment` | Overall Assessment | Text |
 | `dm-status` | DM Status | Coded |
 | `htn-status` | HTN Status | Coded |
+| `obs-complic-status` | Complication Status | Coded |
 | `obs-comorb-status` | Comorbidity Status | Coded |
 | `obs-linked-to` | Linked To | Text |
 | `obs-linkage-note` | Linkage Note | Text |
