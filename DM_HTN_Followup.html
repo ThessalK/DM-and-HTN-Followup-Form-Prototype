@@ -1393,7 +1393,7 @@
                     <tr>
                         <td class="label-cell">LDL</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-ldl" oninput="allowOnlyInteger(this)">
+                            <input type="text" id="obs-ldl" oninput="allowOnlyInteger(this); autoCalculateDyslipidemiaStatus()">
                             <span class="form-hint">(0 - 140)</span>
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
@@ -1447,6 +1447,18 @@
                                 <option value=""></option>
                                 <option value="Controlled">Controlled</option>
                                 <option value="Uncontrolled">Uncontrolled</option>
+                            </select>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
+                    <tr id="row-dyslipidemia-status" style="display: none;">
+                        <td class="label-cell">Dyslipidemia</td>
+                        <td class="input-cell">
+                            <select id="obs-dyslipidemia-status" style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
+                                <option value=""></option>
+                                <option value="Controlled">Controlled</option>
+                                <option value="Uncontrolled">Uncontrolled</option>
+                                <option value="Unknown">Unknown</option>
                             </select>
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
@@ -3343,6 +3355,32 @@
             return r;
         })();
 
+        function autoCalculateDyslipidemiaStatus() {
+            var row = document.getElementById('row-dyslipidemia-status');
+            var select = document.getElementById('obs-dyslipidemia-status');
+            var dyslipidemiaVal = document.getElementById('obs-dyslipidemia-copy').value.trim();
+
+            if (!row || !select) return;
+
+            if (!dyslipidemiaVal) {
+                row.style.display = 'none';
+                select.value = '';
+                return;
+            }
+
+            row.style.display = 'table-row';
+            var ldlStr = document.getElementById('obs-ldl').value.trim();
+            var ldl = parseFloat(ldlStr);
+
+            if (!ldlStr || isNaN(ldl)) {
+                select.value = 'Unknown';
+            } else if (ldl < 70) {
+                select.value = 'Controlled';
+            } else {
+                select.value = 'Uncontrolled';
+            }
+        }
+
         function getAgeGroup(age) {
             if (age < 40) return null;
             if (age <= 49) return 40;
@@ -3388,13 +3426,14 @@
 
             if (!row || !valueSpan || !badgeSpan) return;
 
-            // Visibility gated on dyslipidemia-copy having a value
+            // Visibility: CVD Risk shows only when dyslipidemia-copy is EMPTY
             var dyslipidemiaVal = document.getElementById('obs-dyslipidemia-copy').value.trim();
-            if (!dyslipidemiaVal) {
+            if (dyslipidemiaVal) {
                 row.style.display = 'none';
                 valueSpan.textContent = '';
                 badgeSpan.textContent = '';
                 badgeSpan.className = 'risk-badge';
+                autoCalculateDyslipidemiaStatus();
                 return;
             }
 
@@ -3495,6 +3534,7 @@
             valueSpan.textContent = label;
             badgeSpan.textContent = label;
             badgeSpan.className = 'risk-badge ' + badgeClass;
+            autoCalculateDyslipidemiaStatus();
         }
     </script>
 

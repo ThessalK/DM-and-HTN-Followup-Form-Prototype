@@ -155,6 +155,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 |---|---|---|---|
 | `dm-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when FBS/RBS/HgA1c has data |
 | `htn-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when SBP/DBP has data |
+| `obs-dyslipidemia-status` | Select (Controlled/Uncontrolled/Unknown) | Auto-computed from LDL when dyslipidemia-copy has entry. Hidden row, shown when dyslipidemia-copy has data |
 | `obs-complic-status` | Select (Same/Corrected/Controlled/Uncontrolled/Unknown) | Shown only when complication pills exist |
 | `obs-comorb-status` | Select (Same/Corrected/Controlled/Uncontrolled/Unknown) | Shown only when comorbidity pills exist |
 
@@ -213,6 +214,7 @@ This section contains the **current encounter treatment plan**. It is always vis
 | `autoCalculateGFR()` | Creatinine input | `obs-gfr` (2021 CKD-EPI) + `obs-gfr-kdigo` (G1–G5) |
 | `calculateOverallAdherence()` | MMAS-4 modal save | `obs-overall-adherence`: Good / Poor |
 | `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, demographics | `row-cvd-risk` badge: <10% (green) / 10–20% (yellow) / 20–30% (orange) / 30–40% (red) / ≥40% (dark red) |
+| `autoCalculateDyslipidemiaStatus()` | dyslipidemia-copy, LDL | `obs-dyslipidemia-status`: Controlled (LDL<70) / Uncontrolled (LDL≥70) / Unknown (no LDL) |
 
 ### Validation Constraints
 
@@ -251,7 +253,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-htn-status` | SBP or DBP has a value |
 | `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
 | `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
-| `row-cvd-risk` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry) |
+| `row-dyslipidemia-status` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry). Auto-hides when cleared |
 | `row-pregnant` | Gender = F and age 15–45 |
 | `row-conceive` | Pregnant answer = "No" |
 | `row-overall-adherence` | Any pharmacologic field has content |
@@ -460,7 +462,7 @@ A **CVD Risk** row (`row-cvd-risk`) appears below the LDL entry in the *Pertinen
 
 ### Visibility
 
-The row is hidden by default and appears only when the **Dyslipidemia** textarea (`obs-dyslipidemia-copy`) in the Treatment (Active Plan) section has a value.
+The row is hidden by default and appears only when the **Dyslipidemia** textarea (`obs-dyslipidemia-copy`) in the Treatment (Active Plan) section is **empty**. When dyslipidemia-copy has a value, CVD Risk is hidden and the **Dyslipidemia** Disease Outcome row is shown instead (auto-computed from LDL).
 
 ### Inputs and Modes
 
@@ -506,8 +508,10 @@ Each cell contains a risk level (0–4) corresponding to the five band labels ab
 - `obs-weight` or `obs-height` (BMI for non-lab mode)
 - `search-dm` (diabetes status)
 - `pill-box-risks` pill add/remove (smoking status)
-- `obs-dyslipidemia-copy` (visibility gate)
+- `obs-dyslipidemia-copy` (visibility gate — show CVD Risk when empty, show Dyslipidemia Status when filled)
 - Demographics age/sex change
+
+Additionally, `autoCalculateDyslipidemiaStatus()` runs directly on `obs-ldl` changes to update the Dyslipidemia Disease Outcome status in real time.
 
 ---
 
@@ -576,6 +580,7 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `dm-status` | DM Status | Coded |
 | `htn-status` | HTN Status | Coded |
 | `obs-complic-status` | Complication Status | Coded |
+| `obs-dyslipidemia-status` | Dyslipidemia Status | Coded |
 | `obs-comorb-status` | Comorbidity Status | Coded |
 | `obs-linked-to` | Linked To | Text |
 | `obs-linkage-note` | Linkage Note | Text |
