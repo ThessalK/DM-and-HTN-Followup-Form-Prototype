@@ -18,8 +18,9 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
    - [Treatment (Active Plan)](#treatment-active-plan)
    - [Appointment](#appointment)
 3. [Behavioral Rules](#behavioral-rules)
-   - [Auto-Calculations](#auto-calculations)
-   - [Conditional Visibility](#conditional-visibility)
+    - [Auto-Calculations](#auto-calculations)
+    - [Validation Constraints](#validation-constraints)
+    - [Conditional Visibility](#conditional-visibility)
    - [Risk-Linked Lifestyle Buttons](#risk-linked-lifestyle-buttons)
    - [MMAS-4 Adherence Modal](#mmas-4-adherence-modal)
 4. [Save / Snapshot System](#save--snapshot-system)
@@ -208,6 +209,25 @@ This section contains the **current encounter treatment plan**. It is always vis
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
 | `autoCalculateGFR()` | Creatinine input | `obs-gfr` (2021 CKD-EPI) + `obs-gfr-kdigo` (G1–G5) |
 | `calculateOverallAdherence()` | MMAS-4 modal save | `obs-overall-adherence`: Good / Poor |
+
+### Validation Constraints
+
+Numeric fields validate on blur. Out-of-range values trigger a red border + inline error message.
+
+| Field | Range | Notes |
+|---|---|---|
+| Systolic BP | 50 – 300 | `obs-sbp` |
+| Diastolic BP | 30 – 180 | `obs-dbp` |
+| Pulse Rate | 30 – 200 | `obs-pulse` |
+| Weight | 5 – 250 | `obs-weight` |
+| Height | 50 – 250 | `obs-height` |
+| Waist Circumference | 50 – 180 | `obs-waist` |
+| FBS | 30 – 600 | `obs-fbs` |
+| RBS | 30 – 600 | `obs-rbs` |
+| HgA1c | 4 – 20 | `obs-hga1c` |
+| Creatinine | 1 – 15 | `obs-creatinine` (integer) |
+| Na+ | 70 – 200 | `obs-na` |
+| K+ | 1 – 10 | `obs-k` |
 
 ### Conditional Visibility
 

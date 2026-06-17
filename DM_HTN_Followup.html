@@ -818,6 +818,16 @@
                 margin-bottom: 6px;
             }
         }
+        .field-error {
+            border: 2px solid #d32f2f !important;
+            background-color: #fff5f5;
+        }
+        .field-error-msg {
+            color: #d32f2f;
+            font-size: 11px;
+            display: block;
+            margin-top: 2px;
+        }
     </style>
 </head>
 
@@ -1094,7 +1104,7 @@
                     <tr>
                         <td class="label-cell">Systolic Blood Pressure</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-sbp" oninput="allowOnlyInteger(this); calculateHTNGrade(); autoCalculateHTNStatus()">
+                            <input type="text" id="obs-sbp" data-min="50" data-max="300" oninput="allowOnlyInteger(this); calculateHTNGrade(); autoCalculateHTNStatus()">
                             <span class="form-hint">(80 - 120)</span>
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
@@ -1102,7 +1112,7 @@
                     <tr>
                         <td class="label-cell">Diastolic Blood Pressure</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-dbp" oninput="allowOnlyInteger(this); calculateHTNGrade(); autoCalculateHTNStatus()">
+                            <input type="text" id="obs-dbp" data-min="30" data-max="180" oninput="allowOnlyInteger(this); calculateHTNGrade(); autoCalculateHTNStatus()">
                             <span class="form-hint">(60 - 80)</span>
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
@@ -1120,7 +1130,7 @@
                     <tr>
                         <td class="label-cell">Pulse Rate</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-pulse" oninput="allowOnlyInteger(this); checkPulseRate()">
+                            <input type="text" id="obs-pulse" data-min="30" data-max="200" oninput="allowOnlyInteger(this); checkPulseRate()">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -1151,14 +1161,14 @@
                     <tr>
                         <td class="label-cell">Weight</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-weight" oninput="allowOnlyInteger(this); autoCalculateBMI()" placeholder="kg">
+                            <input type="text" id="obs-weight" data-min="5" data-max="250" oninput="allowOnlyInteger(this); autoCalculateBMI()" placeholder="kg">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
                     <tr>
                         <td class="label-cell">Height</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-height" oninput="allowOnlyInteger(this); autoCalculateBMI(); calculateHTNGrade()" placeholder="cm">
+                            <input type="text" id="obs-height" data-min="50" data-max="250" oninput="allowOnlyInteger(this); autoCalculateBMI(); calculateHTNGrade()" placeholder="cm">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -1182,7 +1192,7 @@
                     <tr id="row-waist-entry" style="display: none;">
                         <td class="label-cell">Waist Circumference</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-waist" oninput="allowOnlyInteger(this); autoCalculateWaistRisk()" placeholder="cm">
+                            <input type="text" id="obs-waist" data-min="50" data-max="180" oninput="allowOnlyInteger(this); autoCalculateWaistRisk()" placeholder="cm">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -1263,21 +1273,21 @@
                     <tr>
                         <td class="label-cell">FBS(mg/dl)</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-fbs" oninput="allowOnlyInteger(this); checkKetoneTrigger(); autoCalculateDMStatus()">
+                            <input type="text" id="obs-fbs" data-min="30" data-max="600" oninput="allowOnlyInteger(this); checkKetoneTrigger(); autoCalculateDMStatus()">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
                     <tr>
                         <td class="label-cell">RBS(mg/dl)</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-rbs" oninput="allowOnlyInteger(this); checkKetoneTrigger(); autoCalculateDMStatus()">
+                            <input type="text" id="obs-rbs" data-min="30" data-max="600" oninput="allowOnlyInteger(this); checkKetoneTrigger(); autoCalculateDMStatus()">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
                     <tr>
                         <td class="label-cell">HgA1c(%)</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-hga1c" oninput="allowOnlyInteger(this); autoCalculateDMStatus()">
+                            <input type="text" id="obs-hga1c" data-min="4" data-max="20" oninput="allowOnlyInteger(this); autoCalculateDMStatus()">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -1319,7 +1329,7 @@
                     <tr>
                         <td class="label-cell">Creatinine</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-creatinine" oninput="allowOnlyInteger(this); autoCalculateGFR()">
+                            <input type="text" id="obs-creatinine" data-min="1" data-max="15" oninput="allowOnlyInteger(this); autoCalculateGFR()">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -1339,14 +1349,14 @@
                     <tr>
                         <td class="label-cell">Na+</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-na" oninput="allowOnlyInteger(this)">
+                            <input type="text" id="obs-na" data-min="70" data-max="200" oninput="allowOnlyInteger(this)">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
                     <tr>
                         <td class="label-cell">K+</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-k" oninput="allowOnlyInteger(this)">
+                            <input type="text" id="obs-k" data-min="1" data-max="10" oninput="allowOnlyInteger(this)">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -2352,6 +2362,41 @@
         function allowOnlyInteger(input) {
             input.value = input.value.replace(/[^0-9]/g, '');
         }
+
+        function validateNumericRange(input) {
+            var msgEl = input.parentNode.querySelector('.field-error-msg');
+            if (!msgEl) {
+                msgEl = document.createElement('span');
+                msgEl.className = 'field-error-msg';
+                input.parentNode.appendChild(msgEl);
+            }
+            var val = parseFloat(input.value);
+            var min = parseFloat(input.getAttribute('data-min'));
+            var max = parseFloat(input.getAttribute('data-max'));
+            if (input.value === '') {
+                input.classList.remove('field-error');
+                msgEl.innerText = '';
+                return;
+            }
+            if (isNaN(val) || val < min || val > max) {
+                input.classList.add('field-error');
+                msgEl.innerText = 'Must be between ' + min + ' and ' + max;
+            } else {
+                input.classList.remove('field-error');
+                msgEl.innerText = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('input[data-min][data-max]').forEach(function (input) {
+                input.addEventListener('blur', function () { validateNumericRange(this); });
+                input.addEventListener('input', function () {
+                    this.classList.remove('field-error');
+                    var msg = this.parentNode.querySelector('.field-error-msg');
+                    if (msg) msg.innerText = '';
+                });
+            });
+        });
 
         function resetNowColumn() {
             document.querySelectorAll('.table-layout .input-cell').forEach(function(cell) {
