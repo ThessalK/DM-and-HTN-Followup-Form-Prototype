@@ -731,6 +731,93 @@
                 padding: 2px 8px;
             }
         }
+
+        /* --- Pediatric BP Result Panel --- */
+        #row-peds-bp-result {
+            display: none;
+        }
+        #row-peds-bp-result td {
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            vertical-align: middle;
+        }
+        #row-peds-bp-result td.label-cell {
+            width: 200px;
+            min-width: 200px;
+            background-color: #f9f9f9;
+            color: #555;
+            font-size: 13px;
+        }
+        .peds-bp-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .peds-bp-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            color: #fff;
+            width: fit-content;
+        }
+        .peds-bp-badge.normal {
+            background-color: #5cb85c;
+        }
+        .peds-bp-badge.elevated {
+            background-color: #f0ad4e;
+        }
+        .peds-bp-badge.stage1 {
+            background-color: #e67e22;
+        }
+        .peds-bp-badge.stage2 {
+            background-color: #d9534f;
+        }
+        .peds-bp-badge.hypotensive {
+            background-color: #5bc0de;
+        }
+        .peds-bp-detail {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.4;
+        }
+        .peds-bp-detail strong {
+            color: #333;
+        }
+        .peds-bp-detail .threshold-label {
+            display: inline-block;
+            margin-right: 12px;
+        }
+        .peds-bp-detail .threshold-label span {
+            font-weight: 600;
+            color: var(--bahmni-teal);
+        }
+        @media (max-width: 768px) {
+            #row-peds-bp-result td.label-cell {
+                width: 140px;
+                min-width: 140px;
+            }
+        }
+        @media (max-width: 480px) {
+            #row-peds-bp-result td.label-cell {
+                width: 100%;
+                min-width: 0;
+                background-color: #f0f0f0;
+                font-size: 12px;
+                padding: 4px 8px;
+                border-bottom: 1px solid #ddd;
+            }
+            #row-peds-bp-result td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                padding: 6px 8px;
+            }
+            #row-peds-bp-result {
+                border: 1px solid #ccc;
+                margin-bottom: 6px;
+            }
+        }
     </style>
 </head>
 
@@ -763,6 +850,27 @@
                     <tr class="table-header">
                         <td></td>
                         <td>Now <button type="button" class="add-new-btn" onclick="copyLastObservation()">Copy Last Observation</button> <button type="button" class="add-new-btn" onclick="resetNowColumn()">Add New</button></td>
+                    </tr>
+
+                    <tr class="table-header" style="background:#ddd;">
+                        <td colspan="2">Test Demographics <span style="font-weight:400;font-size:11px;color:#666;">(will be replaced by Bahmni patient data)</span></td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Age (years)</td>
+                        <td class="input-cell">
+                            <input type="text" id="demo-age" value="28" oninput="allowOnlyInteger(this); syncDemographics()" style="width:80px;">
+                            <span class="form-hint">Set age < 13 for pediatric BP</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Sex</td>
+                        <td class="input-cell">
+                            <div class="btn-group" style="flex-direction:row; gap:6px; width:auto;">
+                                <button type="button" class="bahmni-btn demo-sex-btn" data-sex="M" onclick="setDemoSex('M')">Male</button>
+                                <button type="button" class="bahmni-btn demo-sex-btn selected" data-sex="F" onclick="setDemoSex('F')">Female</button>
+                            </div>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
                     </tr>
 
                     <tr class="table-header" style="background:#ddd;">
@@ -986,6 +1094,16 @@
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
+                    <tr id="row-peds-bp-result" style="display:none;">
+                        <td class="label-cell">Pediatric BP Classification</td>
+                        <td class="input-cell">
+                            <div class="peds-bp-container">
+                                <div class="peds-bp-badge" id="peds-bp-badge"></div>
+                                <div class="peds-bp-detail" id="peds-bp-detail"></div>
+                            </div>
+                            <div class="icon-btn" title="Add notes"></div>
+                        </td>
+                    </tr>
                     <tr>
                         <td class="label-cell">Pulse Rate</td>
                         <td class="input-cell">
@@ -1027,7 +1145,7 @@
                     <tr>
                         <td class="label-cell">Height</td>
                         <td class="input-cell">
-                            <input type="text" id="obs-height" oninput="allowOnlyInteger(this); autoCalculateBMI()" placeholder="cm">
+                            <input type="text" id="obs-height" oninput="allowOnlyInteger(this); autoCalculateBMI(); calculateHTNGrade()" placeholder="cm">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -1426,6 +1544,14 @@
         const patientDemographics = { age: 28, gender: 'F' };
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Init test demographics UI
+            var ageInput = document.getElementById('demo-age');
+            if (ageInput) ageInput.value = patientDemographics.age;
+            var sexBtns = document.querySelectorAll('.demo-sex-btn');
+            sexBtns.forEach(function(b) {
+                b.classList.toggle('selected', b.dataset.sex === patientDemographics.gender);
+            });
+
             if (patientDemographics.gender === 'F' && patientDemographics.age >= 15 && patientDemographics.age <= 45) {
                 document.getElementById('row-pregnant').style.display = 'table-row';
             }
@@ -1439,6 +1565,25 @@
             initAppointmentPicker();
             updateLifestyleButtons();
         });
+
+        function syncDemographics() {
+            var ageInput = document.getElementById('demo-age');
+            if (ageInput) {
+                var v = parseInt(ageInput.value);
+                if (!isNaN(v)) patientDemographics.age = v;
+            }
+            calculateHTNGrade();
+            autoCalculateHTNStatus();
+        }
+
+        function setDemoSex(sex) {
+            patientDemographics.gender = sex;
+            document.querySelectorAll('.demo-sex-btn').forEach(function(b) {
+                b.classList.toggle('selected', b.dataset.sex === sex);
+            });
+            calculateHTNGrade();
+            autoCalculateHTNStatus();
+        }
 
         function togglePregnancyBtn(btn, val) {
             toggleBtn(btn);
@@ -1573,17 +1718,291 @@
             }
         }
 
+        // ===================================================================
+        // PEDIATRIC BP MODULE — AAP 2017 GUIDELINES INTEGRATION (Age < 13)
+        // ===================================================================
+
+        // CDC Stature-for-Age LMS parameters (approximate yearly values)
+        const CDC_STATURE_LMS = {
+            M: {
+                1:  { L: 1.0, M: 76.5, S: 0.047 },
+                2:  { L: 1.0, M: 87.2, S: 0.049 },
+                3:  { L: 1.0, M: 95.0, S: 0.047 },
+                4:  { L: 1.0, M: 102.0, S: 0.046 },
+                5:  { L: 1.0, M: 108.5, S: 0.044 },
+                6:  { L: 1.0, M: 114.5, S: 0.043 },
+                7:  { L: 1.0, M: 120.5, S: 0.042 },
+                8:  { L: 1.0, M: 126.5, S: 0.042 },
+                9:  { L: 1.0, M: 132.5, S: 0.042 },
+                10: { L: 1.0, M: 138.0, S: 0.043 },
+                11: { L: 1.0, M: 143.5, S: 0.044 },
+                12: { L: 1.0, M: 149.0, S: 0.045 },
+                13: { L: 1.0, M: 155.0, S: 0.046 }
+            },
+            F: {
+                1:  { L: 1.0, M: 74.0, S: 0.048 },
+                2:  { L: 1.0, M: 85.5, S: 0.049 },
+                3:  { L: 1.0, M: 93.5, S: 0.048 },
+                4:  { L: 1.0, M: 100.5, S: 0.046 },
+                5:  { L: 1.0, M: 107.0, S: 0.044 },
+                6:  { L: 1.0, M: 113.0, S: 0.043 },
+                7:  { L: 1.0, M: 119.0, S: 0.042 },
+                8:  { L: 1.0, M: 125.0, S: 0.041 },
+                9:  { L: 1.0, M: 130.5, S: 0.041 },
+                10: { L: 1.0, M: 136.5, S: 0.042 },
+                11: { L: 1.0, M: 142.5, S: 0.043 },
+                12: { L: 1.0, M: 148.5, S: 0.044 },
+                13: { L: 1.0, M: 153.5, S: 0.045 }
+            }
+        };
+
+        // AAP 2017 Normative BP Tables (Flynn et al., Pediatrics 2017)
+        // Height percentile buckets: [5th, 10th, 25th, 50th, 75th, 90th, 95th]
+        // Each entry: [p50_sys, p90_sys, p95_sys, p50_dia, p90_dia, p95_dia]
+        const AAP_BP = {
+            M: {
+                1:  { H: [85,85,86,86,87,88,88, 98,99,99,100,100,101,101, 102,102,103,103,104,105,105, 40,40,40,41,41,42,42, 52,52,53,53,54,54,54, 54,54,55,55,56,57,57] },
+                2:  { H: [87,87,88,89,89,90,91, 100,100,101,102,103,103,104, 104,105,105,106,107,107,108, 43,43,44,44,45,46,46, 55,55,56,56,57,58,58, 57,58,58,59,60,61,61] },
+                3:  { H: [88,89,89,90,91,92,92, 101,102,102,103,104,105,105, 106,106,107,107,108,109,109, 45,46,46,47,48,49,49, 58,58,59,59,60,61,61, 60,61,61,62,63,64,64] },
+                4:  { H: [90,90,91,92,93,94,94, 102,103,104,105,105,106,107, 107,107,108,108,109,110,110, 48,49,49,50,51,52,52, 60,61,62,62,63,64,64, 63,64,65,66,67,67,68] },
+                5:  { H: [91,92,93,94,95,96,96, 103,104,105,106,107,108,108, 107,108,109,109,110,111,112, 51,51,52,53,54,55,55, 63,64,65,65,66,67,67, 66,67,68,69,70,70,71] },
+                6:  { H: [93,93,94,95,96,97,98, 105,105,106,107,109,110,110, 108,109,110,111,112,113,114, 54,54,55,56,57,57,58, 66,66,67,68,68,69,69, 69,70,70,71,72,72,73] },
+                7:  { H: [94,94,95,97,98,98,99, 106,107,108,109,110,111,111, 110,110,111,112,114,115,116, 56,56,57,58,58,59,59, 68,68,69,70,70,71,71, 71,71,72,73,73,74,74] },
+                8:  { H: [95,96,97,98,99,99,100, 107,108,109,110,111,112,112, 111,112,112,114,115,116,117, 57,57,58,59,59,60,60, 69,70,70,71,72,72,73, 72,73,73,74,75,75,75] },
+                9:  { H: [96,97,98,99,100,101,101, 107,108,109,110,112,113,114, 112,112,113,115,116,118,119, 57,58,59,60,61,62,62, 70,71,72,73,74,74,74, 74,74,75,76,76,77,77] },
+                10: { H: [97,98,99,100,101,102,103, 108,109,111,112,113,115,116, 112,113,114,116,118,120,121, 59,60,61,62,63,63,64, 72,73,74,74,75,75,76, 76,76,77,77,78,78,78] },
+                11: { H: [99,99,101,102,103,104,106, 110,111,112,114,116,117,118, 114,114,116,118,120,123,124, 61,61,62,63,63,63,63, 74,74,75,75,75,76,76, 77,78,78,78,78,78,78] },
+                12: { H: [101,101,102,104,106,108,109, 113,114,115,117,119,121,122, 116,117,118,121,124,126,128, 61,62,62,62,62,63,63, 75,75,75,75,75,76,76, 78,78,78,78,78,79,79] }
+            },
+            F: {
+                1:  { H: [84,85,86,86,87,88,88, 98,99,99,100,101,102,102, 101,102,102,103,104,105,105, 41,42,42,43,44,45,46, 54,55,56,56,57,58,58, 59,59,60,60,61,62,62] },
+                2:  { H: [87,87,88,89,90,91,91, 101,101,102,103,104,105,106, 104,105,106,106,107,108,109, 45,46,47,48,49,50,51, 58,58,59,60,61,62,62, 62,63,63,64,65,66,66] },
+                3:  { H: [88,89,89,90,91,92,93, 102,103,104,104,105,106,107, 106,106,107,108,109,110,110, 48,48,49,50,51,53,53, 60,61,61,62,63,64,65, 64,65,65,66,67,68,69] },
+                4:  { H: [89,90,91,92,93,94,94, 103,104,105,106,107,108,108, 107,108,109,109,110,111,112, 50,51,51,53,54,55,55, 62,63,64,65,66,67,67, 66,67,68,69,70,70,71] },
+                5:  { H: [90,91,92,93,94,95,96, 104,105,106,107,108,109,110, 108,109,109,110,111,112,113, 52,52,53,55,56,57,57, 64,65,66,67,68,69,70, 68,69,70,71,72,73,73] },
+                6:  { H: [92,92,93,94,96,97,97, 105,106,107,108,109,110,111, 109,109,110,111,112,113,114, 54,54,55,56,57,58,59, 67,67,68,69,70,71,71, 70,71,72,72,73,74,74] },
+                7:  { H: [92,93,94,95,97,98,99, 106,106,107,109,110,111,112, 109,110,111,112,113,114,115, 55,55,56,57,58,59,60, 68,68,69,70,71,72,72, 72,72,73,73,74,74,75] },
+                8:  { H: [93,94,95,97,98,99,100, 107,107,108,110,111,112,113, 110,111,112,113,115,116,117, 56,56,57,59,60,61,61, 69,70,71,72,72,73,73, 72,73,74,74,75,75,75] },
+                9:  { H: [95,95,97,98,99,100,101, 108,108,109,111,112,113,114, 112,112,113,114,116,117,118, 57,58,59,60,60,61,61, 71,71,72,73,73,73,73, 74,74,75,75,75,75,75] },
+                10: { H: [96,97,98,99,101,102,103, 109,110,111,112,113,115,116, 113,114,114,116,117,119,120, 58,59,59,60,61,61,62, 72,73,73,73,73,73,73, 75,75,76,76,76,76,76] },
+                11: { H: [98,99,101,102,104,105,106, 111,112,113,114,116,118,120, 115,116,117,118,120,123,124, 60,60,60,61,62,63,64, 74,74,74,74,74,75,75, 76,77,77,77,77,77,77] },
+                12: { H: [102,102,104,105,107,108,108, 114,115,116,118,120,122,122, 118,119,120,122,124,125,126, 61,61,61,62,64,65,65, 75,75,75,75,76,76,76, 78,78,78,78,79,79,79] }
+            }
+        };
+
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function calculateHeightZScore(age, sex, heightCm) {
+            const data = CDC_STATURE_LMS[sex];
+            if (!data) return null;
+            if (heightCm == null || heightCm <= 0) return null;
+            const ageFloor = Math.floor(age);
+            const ageCeil = Math.ceil(age);
+            let lmsA, lmsB;
+            if (ageFloor === ageCeil || ageCeil > 13) {
+                lmsA = data[Math.min(ageFloor, 13)];
+                if (!lmsA) return null;
+                lmsB = lmsA;
+            } else {
+                lmsA = data[ageFloor];
+                lmsB = data[Math.min(ageCeil, 13)];
+                if (!lmsA || !lmsB) return null;
+            }
+            const t = (ageCeil > 13 || ageFloor === ageCeil) ? 0 : (age - ageFloor) / (ageCeil - ageFloor);
+            const L = lerp(lmsA.L, lmsB.L, t);
+            const M = lerp(lmsA.M, lmsB.M, t);
+            const S = lerp(lmsA.S, lmsB.S, t);
+            if (M <= 0 || S <= 0) return null;
+            if (Math.abs(L) < 0.001) {
+                return Math.log(heightCm / M) / S;
+            }
+            return (Math.pow(heightCm / M, L) - 1) / (L * S);
+        }
+
+        function heightZToPercentileBucket(z) {
+            const pctBuckets = [5, 10, 25, 50, 75, 90, 95];
+            const zCutoffs = [-1.645, -1.282, -0.674, 0, 0.674, 1.282, 1.645];
+            if (z <= zCutoffs[0]) return { lo: 0, hi: 0, t: 0 };
+            if (z >= zCutoffs[zCutoffs.length - 1]) return { lo: 6, hi: 6, t: 0 };
+            for (let i = 0; i < zCutoffs.length - 1; i++) {
+                if (z >= zCutoffs[i] && z < zCutoffs[i + 1]) {
+                    return {
+                        lo: i,
+                        hi: i + 1,
+                        t: (z - zCutoffs[i]) / (zCutoffs[i + 1] - zCutoffs[i])
+                    };
+                }
+            }
+            return { lo: 3, hi: 3, t: 0 };
+        }
+
+        function getPediatricBPThresholds(age, sex, heightCm) {
+            const ageInt = Math.floor(age);
+            if (ageInt < 1 || ageInt > 12) return null;
+            const table = AAP_BP[sex];
+            if (!table) return null;
+            const row = table[ageInt];
+            if (!row) return null;
+            const htArr = row.H;
+            // htArr layout: 42 values → 6 rows × 7 cols
+            // [p50_sys(7), p90_sys(7), p95_sys(7), p50_dia(7), p90_dia(7), p95_dia(7)]
+            const idx50S = 0, idx90S = 7, idx95S = 14;
+            const idx50D = 21, idx90D = 28, idx95D = 35;
+            const z = calculateHeightZScore(age, sex, heightCm);
+            if (z == null) return null;
+            const bucket = heightZToPercentileBucket(z);
+            function interp(arr) {
+                if (bucket.lo === bucket.hi) return arr[bucket.lo];
+                return lerp(arr[bucket.lo], arr[bucket.hi], bucket.t);
+            }
+            return {
+                p50sys: interp(htArr.slice(idx50S, idx50S + 7)),
+                p90sys: interp(htArr.slice(idx90S, idx90S + 7)),
+                p95sys: interp(htArr.slice(idx95S, idx95S + 7)),
+                p50dia: interp(htArr.slice(idx50D, idx50D + 7)),
+                p90dia: interp(htArr.slice(idx90D, idx90D + 7)),
+                p95dia: interp(htArr.slice(idx95D, idx95D + 7)),
+                heightZ: z
+            };
+        }
+
+        function classifyPediatricBP(sbp, dbp, th) {
+            if (!th) return { category: '—', label: '—', cssClass: '' };
+
+            // Hypotensive: estimated 5th percentile from p50 & p95
+            var estP5sys = 2 * th.p50sys - th.p95sys;
+            var estP5dia = 2 * th.p50dia - th.p95dia;
+            var age = patientDemographics.age;
+            var absMinSys = 70 + age * 2;
+            if (age > 10) absMinSys = 90;
+            if (sbp < Math.min(estP5sys, absMinSys) || dbp < Math.min(estP5dia, 50)) {
+                return { category: 'Hypotensive', label: 'Hypotensive', cssClass: 'hypotensive' };
+            }
+
+            const sysP95p12 = th.p95sys + 12;
+            const diaP95p12 = th.p95dia + 12;
+            const sysGe90 = sbp >= th.p90sys;
+            const sysGe95 = sbp >= th.p95sys;
+            const sysGe95p12 = sbp >= sysP95p12;
+            const diaGe90 = dbp >= th.p90dia;
+            const diaGe95 = dbp >= th.p95dia;
+            const diaGe95p12 = dbp >= diaP95p12;
+            const sysStage1Alt = sbp >= 130 && sbp <= 139;
+            const diaStage1Alt = dbp >= 80 && dbp <= 89;
+            const stage2AltSys = sbp >= 140;
+            const stage2AltDia = dbp >= 90;
+            const elevatedAlt = sbp >= 120 || dbp >= 80;
+
+            let sysLabel = '';
+            let diaLabel = '';
+
+            // Classify SBP
+            if (sysGe95p12 || stage2AltSys) {
+                sysLabel = 'Stage 2 HTN';
+            } else if (sysGe95 || sysStage1Alt) {
+                sysLabel = 'Stage 1 HTN';
+            } else if (sysGe90 || elevatedAlt) {
+                sysLabel = 'Elevated';
+            } else {
+                sysLabel = 'Normal';
+            }
+
+            // Classify DBP
+            if (diaGe95p12 || stage2AltDia) {
+                diaLabel = 'Stage 2 HTN';
+            } else if (diaGe95 || diaStage1Alt) {
+                diaLabel = 'Stage 1 HTN';
+            } else if (diaGe90 || elevatedAlt) {
+                diaLabel = 'Elevated';
+            } else {
+                diaLabel = 'Normal';
+            }
+
+            const severity = { 'Hypotensive': -1, 'Normal': 0, 'Elevated': 1, 'Stage 1 HTN': 2, 'Stage 2 HTN': 3 };
+            const finalLabel = severity[sysLabel] >= severity[diaLabel] ? sysLabel : diaLabel;
+
+            let cssClass = '';
+            if (finalLabel === 'Normal') cssClass = 'normal';
+            else if (finalLabel === 'Elevated') cssClass = 'elevated';
+            else if (finalLabel === 'Stage 1 HTN') cssClass = 'stage1';
+            else cssClass = 'stage2';
+
+            return { category: finalLabel, label: finalLabel, cssClass: cssClass };
+        }
+
         // Auto-calculate HTN Grade
         function calculateHTNGrade() {
             const sbpStr = document.getElementById('obs-sbp').value;
             const dbpStr = document.getElementById('obs-dbp').value;
             const gradeInput = document.getElementById('obs-htn-grade');
             const gradeRow = document.getElementById('row-htn-grade');
+            const pedsRow = document.getElementById('row-peds-bp-result');
             if (!gradeInput) return;
 
             let sbp = parseInt(sbpStr) || 0;
             let dbp = parseInt(dbpStr) || 0;
 
+            // Pediatric branch (age < 13)
+            const age = patientDemographics.age;
+            const sex = patientDemographics.gender === 'M' || patientDemographics.gender === 'F' ? patientDemographics.gender : 'F';
+            if (age < 13 && sbp > 0 && dbp > 0) {
+                const heightStr = document.getElementById('obs-height').value.trim();
+                const heightCm = parseFloat(heightStr);
+
+                if (!heightCm || heightCm <= 0) {
+                    gradeInput.value = 'Pediatric: Height required';
+                    gradeInput.style.color = '#d9534f';
+                    if (gradeRow) gradeRow.style.display = 'table-row';
+                    if (pedsRow) pedsRow.style.display = 'none';
+                    return;
+                }
+
+                const th = getPediatricBPThresholds(age, sex, heightCm);
+                if (!th) {
+                    gradeInput.value = 'Pediatric: unable to compute';
+                    if (gradeRow) gradeRow.style.display = 'table-row';
+                    if (pedsRow) pedsRow.style.display = 'none';
+                    return;
+                }
+
+                const result = classifyPediatricBP(sbp, dbp, th);
+
+                // Update HTN grade input
+                gradeInput.value = 'Pediatric: ' + result.label;
+                gradeInput.style.color = '#333';
+                if (gradeRow) gradeRow.style.display = 'table-row';
+
+                // Update pediatric detail panel
+                if (pedsRow) {
+                    pedsRow.style.display = 'table-row';
+                    const badge = document.getElementById('peds-bp-badge');
+                    const detail = document.getElementById('peds-bp-detail');
+                    if (badge) {
+                        badge.textContent = result.label;
+                        badge.className = 'peds-bp-badge ' + result.cssClass;
+                    }
+                    if (detail) {
+                        detail.innerHTML = '<span class="threshold-label">90th %ile: SBP <strong>' + th.p90sys.toFixed(0) + '</strong> / DBP <strong>' + th.p90dia.toFixed(0) + '</strong></span>' +
+                            '<span class="threshold-label">95th %ile: SBP <strong>' + th.p95sys.toFixed(0) + '</strong> / DBP <strong>' + th.p95dia.toFixed(0) + '</strong></span>' +
+                            '<br>Height Z-score: <strong>' + th.heightZ.toFixed(2) + '</strong> (age ' + age + 'y, ' + (sex === 'M' ? 'Male' : 'Female') + ')';
+                    }
+                }
+
+                // Visual feedback
+                gradeInput.style.transition = 'background-color 0.3s';
+                gradeInput.style.backgroundColor = '#d4edda';
+                setTimeout(function() {
+                    gradeInput.style.backgroundColor = '#eee';
+                }, 800);
+                return;
+            }
+
+            // Hide pediatric panel when not pediatric or no BP
+            if (pedsRow) pedsRow.style.display = 'none';
+
+            // Adult branch
             if (sbp === 0 && dbp === 0) {
                 gradeInput.value = '';
                 if (gradeRow) gradeRow.style.display = 'none';
@@ -1593,7 +2012,9 @@
             if (gradeRow) gradeRow.style.display = 'table-row';
 
             let grade = "";
-            if (sbp >= 180 || dbp >= 110) {
+            if (sbp < 90 || dbp < 60) {
+                grade = "Hypotensive";
+            } else if (sbp >= 180 || dbp >= 110) {
                 grade = "Grade-3";
             } else if (sbp >= 160 || dbp >= 100) {
                 grade = "Grade-2";
@@ -1604,11 +2025,12 @@
             }
 
             gradeInput.value = grade;
+            gradeInput.style.color = '#333';
 
             // Visual feedback flash
             gradeInput.style.transition = 'background-color 0.3s';
             gradeInput.style.backgroundColor = '#d4edda';
-            setTimeout(() => {
+            setTimeout(function() {
                 gradeInput.style.backgroundColor = '#eee';
             }, 800);
         }
@@ -2619,13 +3041,49 @@
 
             select.value = '';
 
-            if (sbpStr || dbpStr) {
+            if (sbpStr && dbpStr) {
                 row.style.display = 'table-row';
                 const sbp = parseInt(sbpStr);
                 const dbp = parseInt(dbpStr);
-                if (!isNaN(sbp) && !isNaN(dbp) && sbp < 140 && dbp < 90) {
+                if (isNaN(sbp) || isNaN(dbp)) return;
+
+                // Pediatric branch (age < 13)
+                var age = patientDemographics.age;
+                var sex = patientDemographics.gender === 'M' || patientDemographics.gender === 'F' ? patientDemographics.gender : 'F';
+                if (age < 13) {
+                    var heightStr = document.getElementById('obs-height').value.trim();
+                    var heightCm = parseFloat(heightStr);
+                    if (heightCm > 0) {
+                        var th = getPediatricBPThresholds(age, sex, heightCm);
+                        if (th) {
+                            var result = classifyPediatricBP(sbp, dbp, th);
+                            if (result.category === 'Hypotensive') {
+                                select.value = 'Uncontrolled';
+                            } else if (result.category === 'Normal' || result.category === 'Elevated') {
+                                select.value = 'Controlled';
+                            } else {
+                                select.value = 'Uncontrolled';
+                            }
+                            return;
+                        }
+                    }
+                    // Fallback if no height
+                    if (sbp < 90 || dbp < 60) {
+                        select.value = 'Uncontrolled';
+                    } else if (sbp < 120 && dbp < 80) {
+                        select.value = 'Controlled';
+                    } else {
+                        select.value = 'Uncontrolled';
+                    }
+                    return;
+                }
+
+                // Adult branch
+                if (sbp < 90 || dbp < 60) {
+                    select.value = 'Uncontrolled';
+                } else if (sbp < 140 && dbp < 90) {
                     select.value = 'Controlled';
-                } else if (!isNaN(sbp) && !isNaN(dbp)) {
+                } else {
                     select.value = 'Uncontrolled';
                 }
             } else {

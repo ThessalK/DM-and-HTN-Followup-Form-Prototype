@@ -27,8 +27,10 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 6. [Reset (Add New)](#reset-add-new)
 7. [Integer-Only Input Enforcement](#integer-only-input-enforcement)
 8. [Ethiopian Date Picker](#ethiopian-date-picker)
-9. [Mobile Responsiveness](#mobile-responsiveness)
-10. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
+9. [Pediatric BP Classification (AAP 2017)](#pediatric-bp-classification-aap-2017)
+10. [Hypotensive Detection](#hypotensive-detection)
+11. [Mobile Responsiveness](#mobile-responsiveness)
+12. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
 11. [Developer Notes](#developer-notes)
 
 ---
@@ -38,11 +40,11 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 | Aspect | Detail |
 |---|---|
 | **Stack** | HTML5 + CSS3 + Vanilla ES6 JavaScript (no frameworks, no build tools) |
-| **File** | Single file: `DM_HTN_Followup.html` (~2764 lines) |
+| **File** | Single file: `DM_HTN_Followup.html` (~3222 lines) |
 | **State** | Client-side only (no persistence layer; save creates in-memory DOM snapshot columns) |
 | **Calendar** | Ethiopian calendar (E.C.) with Gregorian conversion for the appointment picker |
 | **Mock Data** | Hardcoded `dictConcepts` array simulates OpenMRS concept search |
-| **Demographics** | Mock `patientDemographics` object (`{ age, gender }`) drives conditional rules |
+| **Demographics** | Mock `patientDemographics` object (`{ age, gender }`) drives conditional rules. Editable via in-form **Test Demographics** section (Age input + Sex toggle buttons) for testing pediatric vs adult pathways |
 
 ---
 
@@ -102,12 +104,12 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 #### Vitals
 
 | Field ID | Type | Auto-Calculation |
-|---|---|---|
-| `obs-sbp` | Integer input (text mode) | HTN Grade + HTN Status |
-| `obs-dbp` | Integer input (text mode) | HTN Grade + HTN Status |
+|---|---|---|---|
+| `obs-sbp` | Integer input (text mode) | HTN Grade + HTN Status + Pediatric BP |
+| `obs-dbp` | Integer input (text mode) | HTN Grade + HTN Status + Pediatric BP |
 | `obs-pulse` | Integer input (text mode) | Pulse volume/rhythm row visibility |
 | `obs-weight` | Integer input (text mode) | BMI + WHO Grading |
-| `obs-height` | Integer input (text mode) | BMI + WHO Grading |
+| `obs-height` | Integer input (text mode) | BMI + WHO Grading + Pediatric BP (when age < 13) |
 | `obs-bmi` | Read-only (hidden row) | `weight(kg) / (height(m))²` |
 | `obs-bmi-grading` | Read-only (hidden row) | WHO classification |
 | `obs-waist` | Integer input (hidden row, age ≥ 20) | Metabolic Risk |
@@ -195,8 +197,11 @@ This section contains the **current encounter treatment plan**. It is always vis
 
 | Function | Trigger | Output(s) |
 |---|---|---|
-| `calculateHTNGrade()` | SBP or DBP input | `obs-htn-grade`: Normal / Grade-1 / Grade-2 / Grade-3 |
-| `autoCalculateHTNStatus()` | SBP or DBP input | `htn-status`: Controlled (both < 140/90) or Uncontrolled |
+| `calculateHTNGrade()` | SBP or DBP or Height input | `obs-htn-grade`: **Adult (≥13):** Normal / Grade-1 / Grade-2 / Grade-3 / Hypotensive. **Pediatric (<13):** Pediatric: Normal / Elevated / Stage 1 HTN / Stage 2 HTN / Hypotensive (with height-adjusted percentile thresholds) |
+| `autoCalculateHTNStatus()` | SBP or DBP input | `htn-status`: Controlled / Uncontrolled (pediatric: Normal+Elevated → Controlled, Hypotensive+Stage1+Stage2 → Uncontrolled) |
+| `calculateHeightZScore()` | Height, age, sex | Height-for-age z-score using CDC LMS reference data |
+| `calculatePediatricBPThresholds()` | Age, sex, height | 90th and 95th percentile SBP/DBP thresholds interpolated from AAP 2017 normative tables |
+| `classifyPediatricBP()` | SBP, DBP, thresholds | Pediatric BP category: Normal / Elevated / Stage 1 HTN / Stage 2 HTN / Hypotensive |
 | `autoCalculateDMStatus()` | FBS, RBS, or HgA1c input | `dm-status`: Controlled or Uncontrolled |
 | `autoCalculateBMI()` | Weight or Height input | `obs-bmi` + `obs-bmi-grading` (WHO 7-class) |
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
@@ -208,6 +213,7 @@ This section contains the **current encounter treatment plan**. It is always vis
 | Element | Condition |
 |---|---|
 | `row-htn-grade` | SBP or DBP has a value |
+| `row-peds-bp-result` | Age < 13 + SBP + DBP + Height all have values (shows classification badge + 90th/95th thresholds + height z-score) |
 | `row-pulse-volume`, `row-pulse-rythm` | Pulse rate has a positive integer |
 | `row-bmi`, `row-bmi-zscore` | Both weight and height have values |
 | `row-waist-entry` | Patient age ≥ 20 (evaluated on DOM load) |
@@ -347,6 +353,66 @@ On Copy:
 
 ---
 
+## Pediatric BP Classification (AAP 2017)
+
+When `patientDemographics.age < 13`, the form switches from adult HTN grading to the **2017 AAP pediatric BP classification system**, which requires the child's sex, exact age, height, and blood pressure to compute percentile-based thresholds.
+
+### CDC Stature-for-Age LMS Data
+
+Embedded `CDC_STATURE_LMS` object provides L, M, S parameters for stature-for-age at yearly intervals (ages 1–13) for both sexes, sourced from the CDC 2000 growth charts. The `calculateHeightZScore(age, sex, height_cm)` function interpolates between yearly entries and applies the LMS formula:
+
+```
+Z = ((X / M)^L - 1) / (L × S)
+```
+
+Handles the edge case where L ≈ 0 using the logarithmic form.
+
+### AAP 2017 Normative BP Tables
+
+Embedded `AAP_BP` lookup tables provide systolic and diastolic BP values at the 50th, 90th, and 95th percentiles for ages 1–12, both sexes, across 7 height percentile buckets (5th–95th). The `getPediatricBPThresholds()` function:
+
+1. Converts the height Z-score → nearest height percentile bucket
+2. Looks up BP thresholds from the embedded AAP tables
+3. Interpolates between adjacent height percentile entries for accuracy
+
+### Classification Categories
+
+| Category | Criteria | Badge Color |
+|---|---|---|
+| **Normal** | SBP and DBP both < 90th percentile | Green (`#5cb85c`) |
+| **Elevated** | SBP or DBP ≥ 90th but < 95th percentile, or ≥ 120/80 but still < 95th percentile | Yellow (`#f0ad4e`) |
+| **Stage 1 HTN** | SBP or DBP ≥ 95th percentile but < 95th + 12 mmHg, or 130/80–139/89 | Orange (`#e67e22`) |
+| **Stage 2 HTN** | SBP or DBP ≥ 95th + 12 mmHg, or ≥ 140/90 | Red (`#d9534f`) |
+| **Hypotensive** | SBP or DBP below estimated 5th percentile (2×p50 − p95) or age-based absolute minimum (70 + age×2, capped at 90) | Cyan (`#5bc0de`) |
+
+The higher severity between SBP and DBP determines the final category. A **Pediatric BP Classification** row (`row-peds-bp-result`) appears below the DBP input showing the color-coded badge, computed 90th/95th percentile thresholds, and the height Z-score.
+
+### Age Cutoff
+
+| Age | System | Threshold Source |
+|---|---|---|
+| < 13 | AAP 2017 pediatric classification | Percentile tables (age/sex/height adjusted) |
+| ≥ 13 | Adult HTN grading | Fixed cutoffs (140/90, 160/100, 180/110) |
+
+### Test Demographics
+
+An in-form **Test Demographics** section (above Diagnosis Categories) provides Age and Sex inputs for easy testing of both pathways without using the browser console. Changing the age to < 13 automatically switches to pediatric BP logic.
+
+---
+
+## Hypotensive Detection
+
+Hypotensive classification is applied to **both** age groups:
+
+| Group | Criteria |
+|---|---|
+| **Pediatric (< 13 yr)** | SBP < estimated 5th percentile (`2 × p50 − p95`) **or** SBP < age-based minimum (`70 + age × 2`, capped at 90 for age > 10) **or** DBP < estimated 5th percentile **or** DBP < 50 |
+| **Adult (≥ 13 yr)** | SBP < 90 **or** DBP < 60 |
+
+In `calculateHTNGrade()`, hypotensive is shown as a distinct label in the `obs-htn-grade` field. In `autoCalculateHTNStatus()`, hypotension maps to **Uncontrolled**.
+
+---
+
 ## Mobile Responsiveness
 
 | Breakpoint | Layout |
@@ -440,7 +506,9 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 - **Testing**: load directly in browser, no server required.
 - **Blood pressure thresholds**: Controlled = SBP < 140 AND DBP < 90 (per Ethiopian treatment guidelines).
 - **DM thresholds**: Controlled = HgA1c < 7, or HgA1c 7–8 with FBS ≤ 125; if no HgA1c, FBS ≤ 125 or RBS < 200.
-- **HTN Grade thresholds**: Normal < 140/90, Grade-1 ≥ 140/90, Grade-2 ≥ 160/100, Grade-3 ≥ 180/110.
+- **HTN Grade thresholds**:
+- **Adult (≥13 yr)**: Normal < 140/90, Grade-1 ≥ 140/90, Grade-2 ≥ 160/100, Grade-3 ≥ 180/110, Hypotensive < 90/60.
+- **Pediatric (<13 yr)**: Uses 2017 AAP percentile-based classification with CDC height-for-age z-score. Categories: Normal (both < 90th %ile), Elevated (≥ 90th but < 95th %ile, or ≥ 120/80), Stage 1 HTN (≥ 95th %ile but < 95th+12, or 130/80–139/89), Stage 2 HTN (≥ 95th+12, or ≥ 140/90), Hypotensive (< estimated 5th %ile or age-based absolute minimum). Controlled = Normal/Elevated, Uncontrolled = Hypotensive/Stage 1/Stage 2.
 - **WAIST risk thresholds** (WHO): Male ≤ 94 cm normal, 94–102 increased, > 102 greatly increased. Female ≤ 80 cm normal, 80–88 increased, > 88 greatly increased.
 
 ---
