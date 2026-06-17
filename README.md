@@ -138,6 +138,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 | `obs-gfr-kdigo` | Read-only (hidden row) | G1–G5 with color coding |
 | `obs-na` | Integer input | — |
 | `obs-k` | Integer input | — |
+| `obs-total-cholesterol` | Integer input | — |
 | `obs-triglyceride` | Integer input | — |
 | `obs-ldl` | Integer input | — |
 | `obs-ecg` | Textarea | — |
@@ -228,6 +229,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | Creatinine | 0.05 – 15 | `obs-creatinine` (decimal) |
 | Na+ | 70 – 200 | `obs-na` |
 | K+ | 1 – 10 | `obs-k` |
+| Total Cholesterol | 50 – 500 | `obs-total-cholesterol` |
 
 ### Conditional Visibility
 
@@ -310,7 +312,7 @@ The following fields are **never overwritten** by Copy (identified by field ID):
 
 - **Vitals**: `obs-sbp`, `obs-dbp`, `obs-weight`
 - **Subjective**: `obs-symptoms`
-- **Labs**: `obs-fbs`, `obs-rbs`, `obs-hga1c`, `obs-ketone`, `obs-albumin`, `obs-micro`, `obs-urine-prof`, `obs-creatinine`, `obs-gfr`, `obs-gfr-kdigo`, `obs-na`, `obs-k`, `obs-triglyceride`, `obs-ldl`, `obs-ecg`, `obs-echo`, `obs-fundoscopic`, `obs-other-investigation`, `obs-overall-assessment`
+- **Labs**: `obs-fbs`, `obs-rbs`, `obs-hga1c`, `obs-ketone`, `obs-albumin`, `obs-micro`, `obs-urine-prof`, `obs-creatinine`, `obs-gfr`, `obs-gfr-kdigo`, `obs-na`, `obs-k`, `obs-total-cholesterol`, `obs-triglyceride`, `obs-ldl`, `obs-ecg`, `obs-echo`, `obs-fundoscopic`, `obs-other-investigation`, `obs-overall-assessment`
 - **Admin**: `obs-appointment`, `obs-overall-adherence`
 
 ### Treatment Given population
@@ -354,6 +356,7 @@ On Copy:
 | `obs-creatinine` |
 | `obs-na` |
 | `obs-k` |
+| `obs-total-cholesterol` |
 | `obs-triglyceride` |
 | `obs-ldl` |
 
@@ -488,6 +491,7 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-gfr-kdigo` | KDIGO Category | Text |
 | `obs-na` | Sodium | Numeric |
 | `obs-k` | Potassium | Numeric |
+| `obs-total-cholesterol` | Total Cholesterol | Numeric |
 | `obs-triglyceride` | Triglyceride | Numeric |
 | `obs-ldl` | LDL | Numeric |
 | `obs-ecg` | ECG | Text |
