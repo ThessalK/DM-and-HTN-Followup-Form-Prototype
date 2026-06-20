@@ -671,59 +671,111 @@ Each dynamically generated select is assigned an ID:
 
 ### Concept Mapping
 
-Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended mapping:
+Each field ID maps to an OpenMRS concept. Fields are organized by form section. Copy fields (`*-copy`) represent the treatment plan copy of the same medication concept.
 
-| Field ID | OpenMRS Concept (Suggested UUID) | Datatype |
+#### Diagnosis & Subjective
+
+| Field ID | Concept | Datatype |
 |---|---|---|
 | `search-dm` | Type of DM | Coded |
 | `search-htn` | Type of HTN | Coded |
-| `obs-htn-grade` | HTN Grade | Text |
 | `search-complic` | Complication(s) | Multi-select Coded |
 | `search-comorb` | Comorbidity | Multi-select Coded |
-| `obs-oral-bg-drugs` | Oral Hypoglycemic Drugs | Text |
-| `obs-dm-insulin` | DM (Insulin) | Text |
-| `obs-htn-treatment` | HTN Treatment | Text |
-| `obs-antiplatelet` | Antiplatelet | Text |
-| `obs-dyslipidemia` | Dyslipidemia | Text |
-| `obs-other-meds` | Other Medication | Text |
-| `obs-overall-adherence` | Drug Adherence | Text |
+| `search-risks` | Risk Factors | Multi-select Coded |
 | `obs-symptoms` | Recent Complaint | Text |
-| `search-risks` | Recent Risk Factors | Multi-select Coded |
+| `obs-pregnant` | Pregnancy Status | Coded |
+| `obs-conceive` | Planning to Conceive | Coded |
+| `obs-htn-grade` | HTN Grade (auto-calculated) | Text |
+
+#### Vitals
+
+| Field ID | Concept | Datatype |
+|---|---|---|
 | `obs-sbp` | Systolic Blood Pressure | Numeric |
 | `obs-dbp` | Diastolic Blood Pressure | Numeric |
 | `obs-pulse` | Pulse Rate | Numeric |
-| `obs-weight` | Weight | Numeric |
-| `obs-height` | Height | Numeric |
-| `obs-bmi` | BMI | Calculated |
-| `obs-bmi-grading` | BMI Grading (WHO) | Text |
-| `obs-waist` | Waist Circumference | Numeric |
-| `obs-metabolic-risk` | Metabolic Risk | Text |
-| `obs-fbs` | FBS | Numeric |
-| `obs-rbs` | RBS | Numeric |
-| `obs-hga1c` | HgA1c | Numeric |
+| `obs-weight` | Weight (kg) | Numeric |
+| `obs-height` | Height (cm) | Numeric |
+| `obs-bmi` | BMI (auto-calculated) | Calculated |
+| `obs-bmi-grading` | BMI WHO Grading (auto-calculated) | Text |
+| `obs-waist` | Waist Circumference (cm) | Numeric |
+| `obs-metabolic-risk` | Waist Metabolic Risk (auto-calculated) | Text |
+
+#### Physical Exam
+
+| Field ID | Concept | Datatype |
+|---|---|---|
+| `obs-exam-oral` | Oral/Dental Exam Finding | Text |
+| `obs-exam-heart` | Heart Exam Finding | Text |
+| `obs-exam-arteries` | Peripheral Arteries Exam Finding | Text |
+| `obs-exam-foot` | MSK-Foot Exam Finding | Text |
+| `obs-exam-mental` | Mental Status Exam Finding | Text |
+| `obs-exam-motor` | Motor Exam Finding | Text |
+| `obs-exam-sensory` | Sensory Exam Finding | Text |
+
+#### Lab Investigations
+
+| Field ID | Concept | Datatype |
+|---|---|---|
+| `obs-fbs` | Fasting Blood Sugar (mg/dL) | Numeric |
+| `obs-rbs` | Random Blood Sugar (mg/dL) | Numeric |
+| `obs-hga1c` | Hemoglobin A1c (%) | Numeric |
 | `obs-ketone` | Urine Ketone | Text |
 | `obs-albumin` | Urine Albumin (Protein) | Coded |
 | `obs-micro` | Urine Microscopic Findings | Text |
-| `obs-urine-prof` | 24-hr Urine Protein | Numeric |
-| `obs-creatinine` | Creatinine | Numeric |
-| `obs-gfr` | eGFR (CKiD U25 / CKD-EPI) | Calculated |
-| `obs-gfr-kdigo` | G-Stage (CKiD U25 / KDIGO Category) | Text |
-| `obs-na` | Sodium | Numeric |
-| `obs-k` | Potassium | Numeric |
-| `obs-total-cholesterol` | Total Cholesterol | Numeric |
-| `obs-cvd-risk` | CVD Risk (WHO/ISH) | Calculated |
-| `obs-triglyceride` | Triglyceride | Numeric |
-| `obs-ldl` | LDL | Numeric |
-| `obs-ecg` | ECG | Text |
-| `obs-echo` | ECHO | Text |
+| `obs-urine-prof` | 24-hour Urine Protein | Numeric |
+| `obs-creatinine` | Serum Creatinine (mg/dL) | Numeric |
+| `obs-gfr` | eGFR — CKiD U25 (≤25 yr) / 2021 CKD-EPI (>25 yr) | Calculated |
+| `obs-gfr-kdigo` | G-Stage — CKiD U25 Category / KDIGO Category | Text |
+| `obs-na` | Sodium (mEq/L) | Numeric |
+| `obs-k` | Potassium (mEq/L) | Numeric |
+| `obs-total-cholesterol` | Total Cholesterol (mg/dL) | Numeric |
+| `obs-triglyceride` | Triglyceride (mg/dL) | Numeric |
+| `obs-ldl` | LDL (mg/dL) | Numeric |
+| `obs-cvd-risk` | WHO/ISH CVD Risk (auto-calculated) | Calculated |
+| `obs-ecg` | ECG Finding | Text |
+| `obs-echo` | ECHO Finding | Text |
 | `obs-fundoscopic` | Fundoscopic Finding | Text |
-| `obs-other-investigation` | Other Investigation | Text |
+| `obs-other-investigation` | Other Investigation Finding | Text |
 | `obs-overall-assessment` | Overall Assessment | Text |
-| `dm-status` | DM Status | Coded |
-| `htn-status` | HTN Status | Coded |
-| `obs-dyslipidemia-status` | Dyslipidemia Status | Coded |
-| `outcome-status-complic-*` (dynamic) | Per-complication status (Same/Corrected/Controlled/Uncontrolled/Unknown) | Coded |
-| `outcome-status-comorb-*` (dynamic) | Per-comorbidity status (Same/Corrected/Controlled/Uncontrolled/Unknown) | Coded |
+
+#### Disease Outcome
+
+| Field ID | Concept | Datatype |
+|---|---|---|
+| `dm-status` | DM Status (Controlled / Uncontrolled) | Coded |
+| `htn-status` | HTN Status (Controlled / Uncontrolled) | Coded |
+| `obs-dyslipidemia-status` | Dyslipidemia Status (Controlled / Uncontrolled / Unknown) | Coded |
+| `outcome-status-complic-*` | Per-complication status (Same / Corrected / Controlled / Uncontrolled / Unknown) | Coded |
+| `outcome-status-comorb-*` | Per-comorbidity status (Same / Corrected / Controlled / Uncontrolled / Unknown) | Coded |
+
+#### Pharmacologic Treatment — Baseline (Treatment Given)
+
+| Field ID | Concept | Datatype |
+|---|---|---|
+| `obs-oral-bg-drugs` | Oral Hypoglycemic Drugs | Text |
+| `obs-dm-insulin` | DM Insulin | Text |
+| `obs-htn-treatment` | HTN Treatment | Text |
+| `obs-antiplatelet` | Antiplatelet | Text |
+| `obs-dyslipidemia` | Dyslipidemia Treatment | Text |
+| `obs-other-meds` | Other Medication | Text |
+| `obs-overall-adherence` | Drug Adherence (Good / Poor) | Text |
+
+#### Pharmacologic Treatment — Active Plan (Copy Fields)
+
+| Field ID | Concept | Datatype |
+|---|---|---|
+| `obs-oral-bg-drugs-copy` | Oral Hypoglycemic Drugs (Plan) | Text |
+| `obs-dm-insulin-copy` | DM Insulin (Plan) | Text |
+| `obs-htn-treatment-copy` | HTN Treatment (Plan) | Text |
+| `obs-antiplatelet-copy` | Antiplatelet (Plan) | Text |
+| `obs-dyslipidemia-copy` | Dyslipidemia Treatment (Plan) | Text |
+| `obs-other-meds-copy` | Other Medication (Plan) | Text |
+
+#### Linked Entries, Referral & Appointment
+
+| Field ID | Concept | Datatype |
+|---|---|---|
 | `obs-linked-to` | Linked To | Text |
 | `obs-linkage-note` | Linkage Note | Text |
 | `obs-consultation-to` | Consultation To | Text |
@@ -731,7 +783,8 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-referral-to` | Referral To | Text |
 | `obs-referral-reason` | Referral Reason | Text |
 | `obs-remark` | Remark | Text |
-| `obs-appointment` | Appointment Date | Date (Ethiopian) |
+| `obs-appointment` | Appointment Date (Ethiopian Calendar) | Date |
+| `obs-appointment-gregorian` | Appointment Date (Gregorian, hidden) | Date |
 
 ### Simplified Integration Path (For Bahmni Beginners)
 
@@ -743,6 +796,9 @@ If you are new to Bahmni, you can still deploy these calculations without writin
 4.  **Field IDs**: Ensure the IDs you choose in the Form Builder match the IDs in our `dictConcepts` (e.g., `obs-sbp`, `obs-ldl`).
 
 This "Low-Code" approach allows the EMR to perform the math automatically while using Bahmni's built-in form-saving features.
+
+> [!TIP]
+> See the [Concept Mapping](#concept-mapping) table above for the complete list of field IDs and their suggested OpenMRS concept mappings.
 
 ---
 
