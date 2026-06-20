@@ -1289,7 +1289,7 @@
                         <td class="label-cell">Height</td>
                         <td class="input-cell">
                             <input type="text" id="obs-height" data-min="50" data-max="250"
-                                oninput="allowOnlyInteger(this); autoCalculateBMI(); calculateHTNGrade(); calculateCVDRisk()"
+                                oninput="allowOnlyInteger(this); autoCalculateBMI(); calculateHTNGrade(); calculateCVDRisk(); autoCalculateGFR()"
                                 placeholder="cm">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
@@ -1471,15 +1471,15 @@
                         </td>
                     </tr>
                     <tr id="row-gfr" style="display: none;">
-                        <td class="label-cell">GFR(ml/min/1.73 m2)</td>
+                        <td class="label-cell" id="gfr-label">GFR(ml/min/1.73 m2)</td>
                         <td class="input-cell">
                             <input type="text" id="obs-gfr" readonly
                                 style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 120px; color: var(--bahmni-teal);">
-                            <span class="form-hint" style="margin-left: 10px;">(2021 CKD-EPI)</span>
+                            <span class="form-hint" style="margin-left: 10px;" id="gfr-hint">(2021 CKD-EPI)</span>
                         </td>
                     </tr>
                     <tr id="row-gfr-kdigo" style="display: none;">
-                        <td class="label-cell">KDIGO Category</td>
+                        <td class="label-cell" id="gfr-category-label">KDIGO Category</td>
                         <td class="input-cell">
                             <input type="text" id="obs-gfr-kdigo" readonly
                                 style="background-color: #eee; cursor: not-allowed; font-weight: bold; width: 280px;">
@@ -1766,14 +1766,6 @@
                                 <div id="appointment-picker" class="ethiopian-picker"></div>
                                 <span id="appointment-date-note" class="form-hint">Weekends and full holidays are
                                     inactive.</span>
-                                <div class="form-hint" style="margin-top:4px;color:#7f8c8d;font-size:11px;font-style:italic;">
-                                    Bahmni Integration: This field maps to Bahmni's existing Appointment Scheduling
-                                    concept. The hidden <code>obs-appointment-gregorian</code> value interfaces directly
-                                    with the OpenMRS appointment API for automated follow-up visit tracking, SMS
-                                    reminders, slot quota enforcement against the configured
-                                    <code>maxAppointmentsPerDate</code>, and bi-directional sync with the patient's
-                                    appointment calendar.
-                                </div>
                             </div>
                         </td>
                     </tr>
@@ -1810,6 +1802,7 @@
             toggleEntryLinkedRow('obs-linked-to', 'row-linkage-note', 'obs-linkage-note');
             toggleEntryLinkedRow('obs-consultation-to', 'row-consultation-note', 'obs-consultation-note');
             toggleEntryLinkedRow('obs-referral-to', 'row-referral-reason', 'obs-referral-reason');
+            updateGFRLabels();
             initAppointmentPicker();
             updateLifestyleButtons();
         });
@@ -1823,6 +1816,8 @@
             togglePregnantRow();
             calculateHTNGrade();
             autoCalculateHTNStatus();
+            updateGFRLabels();
+            autoCalculateGFR();
             calculateCVDRisk();
         }
 
@@ -1834,6 +1829,8 @@
             togglePregnantRow();
             calculateHTNGrade();
             autoCalculateHTNStatus();
+            updateGFRLabels();
+            autoCalculateGFR();
             calculateCVDRisk();
         }
 
@@ -2346,69 +2343,105 @@
             }
         }
 
-        // Auto-calculate GFR using 2021 CKD-EPI
-        function autoCalculateGFR() {
-            const crStr = document.getElementById('obs-creatinine').value.trim();
-            const cr = parseFloat(crStr);
-            const gender = patientDemographics.gender || 'F';
-            const age = patientDemographics.age || 28;
+        function updateGFRLabels() {
+            var age = patientDemographics.age || 28;
+            var gfrLabel = document.getElementById('gfr-label');
+            var gfrHint = document.getElementById('gfr-hint');
+            var catLabel = document.getElementById('gfr-category-label');
+            if (age <= 25) {
+                if (gfrLabel) gfrLabel.textContent = 'Estimated GFR by CKiD U25 Creatinine';
+                if (gfrHint) gfrHint.textContent = '(CKiD U25 equation)';
+                if (catLabel) catLabel.textContent = 'CKiD U25 Category';
+            } else {
+                if (gfrLabel) gfrLabel.textContent = 'GFR(ml/min/1.73 m2)';
+                if (gfrHint) gfrHint.textContent = '(2021 CKD-EPI)';
+                if (catLabel) catLabel.textContent = 'KDIGO Category';
+            }
+        }
 
-            const rowGfr = document.getElementById('row-gfr');
-            const inputGfr = document.getElementById('obs-gfr');
+        function autoCalculateGFR() {
+            var crStr = document.getElementById('obs-creatinine').value.trim();
+            var cr = parseFloat(crStr);
+            var gender = patientDemographics.gender || 'F';
+            var age = patientDemographics.age || 28;
+            var heightStr = document.getElementById('obs-height').value.trim();
+            var heightCm = parseFloat(heightStr);
+
+            var rowGfr = document.getElementById('row-gfr');
+            var inputGfr = document.getElementById('obs-gfr');
+
+            updateGFRLabels();
 
             if (!isNaN(cr) && cr > 0) {
-                let kappa, alpha, genderMultiplier;
+                var gfr;
+                var isCkid = age <= 25;
 
-                if (gender === 'F') {
-                    kappa = 0.7;
-                    alpha = (cr <= 0.7) ? -0.241 : -1.2;
-                    genderMultiplier = 1.012;
+                if (isCkid) {
+                    if (isNaN(heightCm) || heightCm <= 0) {
+                        if (rowGfr) rowGfr.style.display = 'table-row';
+                        if (inputGfr) {
+                            inputGfr.value = 'Enter height for CKiD U25';
+                            inputGfr.style.color = '#e67e22';
+                        }
+                        var rowGfrKdigo = document.getElementById('row-gfr-kdigo');
+                        if (rowGfrKdigo) rowGfrKdigo.style.display = 'none';
+                        var inputGfrKdigo = document.getElementById('obs-gfr-kdigo');
+                        if (inputGfrKdigo) inputGfrKdigo.value = '';
+                        return;
+                    }
+                    var kappa = gender === 'F' ? 0.5 : 0.6;
+                    var alpha = cr <= kappa ? -0.5 : -1.200;
+                    var genderMult = gender === 'F' ? 1.012 : 1;
+                    var heightM = heightCm / 100;
+                    gfr = 142 * Math.pow((cr / kappa), alpha) * Math.pow(0.9938, age) * Math.pow(heightM / 1.73, 0.5) * genderMult;
                 } else {
-                    kappa = 0.9;
-                    alpha = (cr <= 0.9) ? -0.302 : -1.2;
-                    genderMultiplier = 1;
+                    var kappa = gender === 'F' ? 0.7 : 0.9;
+                    var alpha = (gender === 'F') ? (cr <= 0.7 ? -0.241 : -1.2) : (cr <= 0.9 ? -0.302 : -1.2);
+                    var genderMult = gender === 'F' ? 1.012 : 1;
+                    gfr = 142 * Math.pow((cr / kappa), alpha) * Math.pow(0.9938, age) * genderMult;
                 }
 
-                const gfr = 142 * Math.pow((cr / kappa), alpha) * Math.pow(0.9938, age) * genderMultiplier;
-
-                inputGfr.value = gfr.toFixed(2);
+                if (inputGfr) {
+                    inputGfr.value = gfr.toFixed(2);
+                    inputGfr.style.color = 'var(--bahmni-teal)';
+                }
                 if (rowGfr) rowGfr.style.display = 'table-row';
 
-                const rowGfrKdigo = document.getElementById('row-gfr-kdigo');
-                const inputGfrKdigo = document.getElementById('obs-gfr-kdigo');
+                var rowGfrKdigo = document.getElementById('row-gfr-kdigo');
+                var inputGfrKdigo = document.getElementById('obs-gfr-kdigo');
 
-                let kdigoStage = "";
-                let kdigoDesc = "";
-                let color = "";
+                var stage = "";
+                var desc = "";
+                var color = "";
 
                 if (gfr >= 90) {
-                    kdigoStage = "G1";
-                    kdigoDesc = "Normal or high";
-                    color = "#5cb85c"; // Green
+                    stage = "G1";
+                    desc = "Normal or high";
+                    color = "#5cb85c";
                 } else if (gfr >= 60) {
-                    kdigoStage = "G2";
-                    kdigoDesc = "Mildly decreased";
-                    color = "#5cb85c"; // Light green
+                    stage = "G2";
+                    desc = "Mildly decreased";
+                    color = "#5cb85c";
                 } else if (gfr >= 45) {
-                    kdigoStage = "G3a";
-                    kdigoDesc = "Mildly to moderately decreased";
-                    color = "#f0ad4e"; // Yellow/Orange
+                    stage = "G3a";
+                    desc = "Mildly to moderately decreased";
+                    color = "#f0ad4e";
                 } else if (gfr >= 30) {
-                    kdigoStage = "G3b";
-                    kdigoDesc = "Moderately to severely decreased";
-                    color = "#e67e22"; // Orange
+                    stage = "G3b";
+                    desc = "Moderately to severely decreased";
+                    color = "#e67e22";
                 } else if (gfr >= 15) {
-                    kdigoStage = "G4";
-                    kdigoDesc = "Severely decreased";
-                    color = "#d9534f"; // Red
+                    stage = "G4";
+                    desc = "Severely decreased";
+                    color = "#d9534f";
                 } else {
-                    kdigoStage = "G5";
-                    kdigoDesc = "Kidney failure";
-                    color = "#c0392b"; // Dark Red
+                    stage = "G5";
+                    desc = "Kidney failure";
+                    color = "#c0392b";
                 }
 
                 if (inputGfrKdigo) {
-                    inputGfrKdigo.value = `${kdigoStage}: ${kdigoDesc}`;
+                    inputGfrKdigo.value = stage + ": " + desc;
                     inputGfrKdigo.style.color = color;
                 }
                 if (rowGfrKdigo) rowGfrKdigo.style.display = 'table-row';
@@ -2416,9 +2449,9 @@
             } else {
                 if (rowGfr) rowGfr.style.display = 'none';
                 if (inputGfr) inputGfr.value = '';
-                const rowGfrKdigo = document.getElementById('row-gfr-kdigo');
+                var rowGfrKdigo = document.getElementById('row-gfr-kdigo');
                 if (rowGfrKdigo) rowGfrKdigo.style.display = 'none';
-                const inputGfrKdigo = document.getElementById('obs-gfr-kdigo');
+                var inputGfrKdigo = document.getElementById('obs-gfr-kdigo');
                 if (inputGfrKdigo) inputGfrKdigo.value = '';
             }
         }
@@ -3743,12 +3776,13 @@
                 return;
             }
 
-            // Check age range
+            // Check age range - skip CVD risk if age is out of 40-74
             if (ageIdx === null || (sex !== 'M' && sex !== 'F')) {
-                row.style.display = 'table-row';
-                valueSpan.textContent = 'Need age 40-74 and sex';
+                row.style.display = 'none';
+                valueSpan.textContent = '';
                 badgeSpan.textContent = '';
                 badgeSpan.className = 'risk-badge';
+                autoCalculateDyslipidemiaStatus();
                 return;
             }
 
