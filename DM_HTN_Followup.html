@@ -3533,32 +3533,35 @@
             var isLab = !isNaN(tc) && tc > 0;
 
             var risk;
-            if (!isLab) {
-                // Non-lab mode: BMI-based (no diabetes needed)
+            var isFallback = false;
+
+            var calcNonLab = function() {
                 var wStr = document.getElementById('obs-weight').value.trim();
                 var hStr = document.getElementById('obs-height').value.trim();
                 var w = parseFloat(wStr), h_cm = parseFloat(hStr);
                 if (isNaN(w) || isNaN(h_cm) || h_cm <= 0 || w <= 0) {
+                    return null;
+                }
+                var bmi = w / ((h_cm / 100) * (h_cm / 100));
+                var bmiIdx = getBMICategory(bmi);
+
+                var nonlabAgeGroup = WHO_2019_NONLAB_AFRE[ageIdx];
+                if (!nonlabAgeGroup) return undefined;
+                var sbpRow = nonlabAgeGroup[sbpIdx];
+                var arrIdx = sexIdx * 10 + smoker * 5 + bmiIdx;
+                return sbpRow[arrIdx];
+            };
+
+            if (!isLab) {
+                // Non-lab mode: BMI-based (no diabetes needed)
+                risk = calcNonLab();
+                if (risk === null) {
                     row.style.display = 'table-row';
                     valueSpan.textContent = 'Enter weight & height for BMI';
                     badgeSpan.textContent = '';
                     badgeSpan.className = 'risk-badge';
                     return;
                 }
-                var bmi = w / ((h_cm / 100) * (h_cm / 100));
-                var bmiIdx = getBMICategory(bmi);
-
-                var nonlabAgeGroup = WHO_2019_NONLAB_AFRE[ageIdx];
-                if (!nonlabAgeGroup) {
-                    row.style.display = 'table-row';
-                    valueSpan.textContent = 'Data not available';
-                    badgeSpan.textContent = '';
-                    badgeSpan.className = 'risk-badge';
-                    return;
-                }
-                var sbpRow = nonlabAgeGroup[sbpIdx];
-                var arrIdx = sexIdx * 10 + smoker * 5 + bmiIdx;
-                risk = sbpRow[arrIdx];
             } else {
                 // Lab mode: total cholesterol (mmol/L) + diabetes status
                 var tcIdx = getTCCategory(tc);
@@ -3570,15 +3573,20 @@
                 var labTable = hasDM ? WHO_2019_LAB_DM_AFRE : WHO_2019_LAB_NONDM_AFRE;
                 var labAgeGroup = labTable[ageIdx];
                 if (!labAgeGroup) {
-                    row.style.display = 'table-row';
-                    valueSpan.textContent = 'Lab data pending for age 40-59 (Array null)';
-                    badgeSpan.textContent = '';
-                    badgeSpan.className = 'risk-badge';
-                    return;
+                    isFallback = true;
+                    risk = calcNonLab();
+                    if (risk === null) {
+                        row.style.display = 'table-row';
+                        valueSpan.textContent = 'Lab data pending. Enter weight & height for BMI fallback.';
+                        badgeSpan.textContent = '';
+                        badgeSpan.className = 'risk-badge';
+                        return;
+                    }
+                } else {
+                    var sbpRow = labAgeGroup[sbpIdx];
+                    var arrIdx = sexIdx * 10 + smoker * 5 + tcIdx;
+                    risk = sbpRow[arrIdx];
                 }
-                var sbpRow = labAgeGroup[sbpIdx];
-                var arrIdx = sexIdx * 10 + smoker * 5 + tcIdx;
-                risk = sbpRow[arrIdx];
             }
 
             if (risk === undefined || risk === null) {
@@ -3594,7 +3602,8 @@
             var badgeClass = getCVDBadgeClass(level);
 
             row.style.display = 'table-row';
-            valueSpan.textContent = risk + '% (' + label + ')';
+            var fallbackNote = isFallback ? ' (Non-Lab fallback)' : '';
+            valueSpan.textContent = risk + '%' + fallbackNote + ' (' + label + ')';
             badgeSpan.textContent = label;
             badgeSpan.className = 'risk-badge ' + badgeClass;
             autoCalculateDyslipidemiaStatus();
