@@ -42,7 +42,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 | Aspect | Detail |
 |---|---|
 | **Stack** | HTML5 + CSS3 + Vanilla ES6 JavaScript (no frameworks, no build tools) |
-| **File** | Single file: `DM_HTN_Followup.html` (~3575 lines) |
+| **File** | Single file: `DM_HTN_Followup.html` (~3924 lines) |
 | **State** | Client-side only (no persistence layer; save creates in-memory DOM snapshot columns) |
 | **Calendar** | Ethiopian calendar (E.C.) with Gregorian conversion for the appointment picker |
 | **Mock Data** | Hardcoded `dictConcepts` array simulates OpenMRS concept search |
@@ -254,7 +254,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
 | `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
 | `row-dyslipidemia-status` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry). Auto-hides when cleared |
-| `row-pregnant` | Gender = F and age 15–45 |
+| `row-pregnant` | Gender = F and age 15–45. Re-evaluated dynamically when age/sex changes via Test Demographics |
 | `row-conceive` | Pregnant answer = "No" |
 | `row-overall-adherence` | Any pharmacologic field has content |
 | `row-linked-to`, `row-linkage-note` | `obs-linked-to` has content |
@@ -464,6 +464,22 @@ A **CVD Risk** row (`row-cvd-risk`) appears below the LDL entry in the *Pertinen
 
 The row is hidden by default and appears only when the **Dyslipidemia** textarea (`obs-dyslipidemia-copy`) in the Treatment (Active Plan) section is **empty**. When dyslipidemia-copy has a value, CVD Risk is hidden and the **Dyslipidemia** Disease Outcome row is shown instead (auto-computed from LDL).
 
+### Statin Suggestion
+
+When the CVD Risk row is visible, a **"Consider starting statin"** suggestion (`#cvd-risk-suggestion`) appears in red bold text below the risk badge if all of the following hold:
+
+- **No dyslipidemia treatment entered** — both `obs-dyslipidemia` (Treatment section) and `obs-dyslipidemia-copy` (Treatment Given section) are empty
+
+And **any** of these criteria is met:
+
+| # | Criterion | Details |
+|---|---|---|
+| 1 | **Age ≥ 40 + Type 2 DM** | `patientDemographics.age >= 40` and `search-dm` = "Type 2 Diabetes Mellitus" |
+| 2 | **Elevated CVD Risk** | Lab-based risk ≥ 20%, or non-lab/BMI-based risk ≥ 10% |
+| 3 | **Elevated Lipids** | Total cholesterol > 200 mg/dL, or LDL ≥ 130 mg/dL |
+
+The suggestion reads: *"Consider starting statin targeting LDL<70 after treatment followup if no complication associated; If complication LDL<55"*
+
 ### Inputs and Modes
 
 The calculator supports two modes:
@@ -506,13 +522,13 @@ Each derived cell contains an exact risk percentage which maps to a risk level (
 `calculateCVDRisk()` runs whenever any of these inputs change:
 - `obs-sbp` (SBP)
 - `obs-total-cholesterol` (TC — switches lab/non-lab mode)
+- `obs-ldl` (LDL — triggers both dyslipidemia status and statin suggestion re-evaluation)
 - `obs-weight` or `obs-height` (BMI for non-lab mode)
 - `search-dm` (diabetes status)
 - `pill-box-risks` pill add/remove (smoking status)
+- `obs-dyslipidemia` (Dyslipidemia treatment — re-evaluates statin suggestion)
 - `obs-dyslipidemia-copy` (visibility gate — show CVD Risk when empty, show Dyslipidemia Status when filled)
 - Demographics age/sex change
-
-Additionally, `autoCalculateDyslipidemiaStatus()` runs directly on `obs-ldl` changes to update the Dyslipidemia Disease Outcome status in real time.
 
 ---
 

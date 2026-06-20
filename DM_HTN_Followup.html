@@ -1133,7 +1133,7 @@
                         <tr>
                             <td class="label-cell">Dyslipidemia</td>
                             <td class="input-cell">
-                                <textarea id="obs-dyslipidemia" style="width:200px;" oninput="checkPharm()"></textarea>
+                                <textarea id="obs-dyslipidemia" style="width:200px;" oninput="checkPharm(); calculateCVDRisk()"></textarea>
                                 <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
                                     onclick="openAdherenceModal('Dyslipidemia', this, 'obs-dyslipidemia')"
                                     style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
@@ -1517,7 +1517,7 @@
                         <td class="label-cell">LDL</td>
                         <td class="input-cell">
                             <input type="text" id="obs-ldl"
-                                oninput="allowOnlyInteger(this); autoCalculateDyslipidemiaStatus()">
+                                oninput="allowOnlyInteger(this); autoCalculateDyslipidemiaStatus(); calculateCVDRisk()">
                             <span class="form-hint">(0 - 140)</span>
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
@@ -1529,6 +1529,7 @@
                             <span id="cvd-risk-badge" class="risk-badge"></span>
                             <span style="font-size:11px;color:#888;margin-left:6px;">(Eastern Sub-Saharan Africa,
                                 lab/non-lab)</span>
+                            <div id="cvd-risk-suggestion" style="margin-top:4px;color:#c0392b;font-weight:bold;font-size:12px;display:none;">Consider starting statin targeting LDL&lt;70 after treatment followup if no complication associated; If complication LDL&lt;55</div>
                         </td>
                     </tr>
                     <tr>
@@ -1786,9 +1787,7 @@
                 b.classList.toggle('selected', b.dataset.sex === patientDemographics.gender);
             });
 
-            if (patientDemographics.gender === 'F' && patientDemographics.age >= 15 && patientDemographics.age <= 45) {
-                document.getElementById('row-pregnant').style.display = 'table-row';
-            }
+            togglePregnantRow();
             if (patientDemographics.age >= 20) {
                 document.getElementById('row-waist-entry').style.display = 'table-row';
             }
@@ -1806,6 +1805,7 @@
                 var v = parseInt(ageInput.value);
                 if (!isNaN(v)) patientDemographics.age = v;
             }
+            togglePregnantRow();
             calculateHTNGrade();
             autoCalculateHTNStatus();
             calculateCVDRisk();
@@ -1816,9 +1816,20 @@
             document.querySelectorAll('.demo-sex-btn').forEach(function (b) {
                 b.classList.toggle('selected', b.dataset.sex === sex);
             });
+            togglePregnantRow();
             calculateHTNGrade();
             autoCalculateHTNStatus();
             calculateCVDRisk();
+        }
+
+        function togglePregnantRow() {
+            var row = document.getElementById('row-pregnant');
+            if (!row) return;
+            if (patientDemographics.gender === 'F' && patientDemographics.age >= 15 && patientDemographics.age <= 45) {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
         }
 
         function togglePregnancyBtn(btn, val) {
@@ -3687,8 +3698,13 @@
             var row = document.getElementById('row-cvd-risk');
             var valueSpan = document.getElementById('cvd-risk-value');
             var badgeSpan = document.getElementById('cvd-risk-badge');
+            var dmType = document.getElementById('search-dm').value.trim();
+            var suggestionEl = document.getElementById('cvd-risk-suggestion');
 
-            if (!row || !valueSpan || !badgeSpan) return;
+            if (!row || !valueSpan || !badgeSpan || !suggestionEl) return;
+
+            // Start with suggestion hidden; only show at end if conditions met
+            suggestionEl.style.display = 'none';
 
             // Visibility: CVD Risk shows only when dyslipidemia-copy is EMPTY
             var dyslipidemiaVal = document.getElementById('obs-dyslipidemia-copy').value.trim();
@@ -3777,7 +3793,6 @@
                 var tcIdx = getTCCategory(tc);
 
                 // Diabetes status
-                var dmType = document.getElementById('search-dm').value.trim();
                 var hasDM = dmType === 'Type 2 Diabetes Mellitus';
 
                 var labTable = hasDM ? WHO_2019_LAB_DM_AFRE : WHO_2019_LAB_NONDM_AFRE;
@@ -3817,6 +3832,24 @@
             badgeSpan.textContent = label;
             badgeSpan.className = 'risk-badge ' + badgeClass;
             autoCalculateDyslipidemiaStatus();
+
+            // Show statin suggestion when no dyslipidemia treatment and:
+            // - age >= 40 + Type 2 DM, OR
+            // - lab risk >= 20% / non-lab risk >= 10%, OR
+            // - Total cholesterol > 200, OR LDL >= 130
+            var txVal = document.getElementById('obs-dyslipidemia').value.trim();
+            var txCopyVal = document.getElementById('obs-dyslipidemia-copy').value.trim();
+            var noDysTx = !txVal && !txCopyVal;
+            var dm2Cond = age >= 40 && dmType === 'Type 2 Diabetes Mellitus';
+            var riskCond = isLab ? risk >= 20 : risk >= 10;
+            var tcStr = document.getElementById('obs-total-cholesterol').value.trim();
+            var ldlStr = document.getElementById('obs-ldl').value.trim();
+            var tcVal = parseFloat(tcStr);
+            var ldlVal = parseFloat(ldlStr);
+            var lipidCond = (!isNaN(tcVal) && tcVal > 200) || (!isNaN(ldlVal) && ldlVal >= 130);
+            if (noDysTx && (dm2Cond || riskCond || lipidCond)) {
+                suggestionEl.style.display = 'block';
+            }
         }
     </script>
 
