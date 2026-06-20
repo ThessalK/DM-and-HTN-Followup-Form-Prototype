@@ -527,14 +527,16 @@ For patients aged **25 years and under**, the form uses the **CKiD U25 creatinin
 ### Equation
 
 ```
-eGFR = 142 × (Scr/κ)^α × 0.9938^age × (height/1.73)^0.5 × 1.012^female
+eGFR = k × (height(m) / sCr(mg/dL))
 ```
 
-| Parameter | Female | Male |
-|-----------|--------|------|
-| κ (kappa) | 0.5    | 0.6  |
-| α (alpha) | −0.5 (Scr ≤ κ), −1.200 (Scr > κ) | same |
-| Female multiplier | 1.012 | 1.0 |
+Where **k** is age- and sex-dependent:
+
+| Age Range | Male (k) | Female (k) |
+|-----------|----------|------------|
+| 1 to <12 years | `39.0 × 1.008^(age−12)` | `36.1 × 1.008^(age−12)` |
+| 12 to <18 years | `39.0 × 1.045^(age−12)` | `36.1 × 1.023^(age−12)` |
+| 18 to 25 years | 50.8 | 41.4 |
 
 ### Inputs
 

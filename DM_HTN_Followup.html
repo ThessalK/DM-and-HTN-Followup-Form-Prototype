@@ -2389,11 +2389,26 @@
                         if (inputGfrKdigo) inputGfrKdigo.value = '';
                         return;
                     }
-                    var kappa = gender === 'F' ? 0.5 : 0.6;
-                    var alpha = cr <= kappa ? -0.5 : -1.200;
-                    var genderMult = gender === 'F' ? 1.012 : 1;
                     var heightM = heightCm / 100;
-                    gfr = 142 * Math.pow((cr / kappa), alpha) * Math.pow(0.9938, age) * Math.pow(heightM / 1.73, 0.5) * genderMult;
+                    var kVal;
+                    if (gender === 'M') {
+                        if (age >= 1 && age < 12) {
+                            kVal = 39.0 * Math.pow(1.008, age - 12);
+                        } else if (age >= 12 && age < 18) {
+                            kVal = 39.0 * Math.pow(1.045, age - 12);
+                        } else {
+                            kVal = 50.8;
+                        }
+                    } else {
+                        if (age >= 1 && age < 12) {
+                            kVal = 36.1 * Math.pow(1.008, age - 12);
+                        } else if (age >= 12 && age < 18) {
+                            kVal = 36.1 * Math.pow(1.023, age - 12);
+                        } else {
+                            kVal = 41.4;
+                        }
+                    }
+                    gfr = kVal * (heightM / cr);
                 } else {
                     var kappa = gender === 'F' ? 0.7 : 0.9;
                     var alpha = (gender === 'F') ? (cr <= 0.7 ? -0.241 : -1.2) : (cr <= 0.9 ? -0.302 : -1.2);
