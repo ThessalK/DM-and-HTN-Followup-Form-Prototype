@@ -493,14 +493,13 @@ The form utilizes three JavaScript arrays acting as lookup tables:
 The structures are nested by **Age Group** → **SBP Category** → **Sex/Smoking/TC or BMI Index**.
 Each derived cell contains an exact risk percentage which maps to a risk level (0–4) corresponding to the five band labels above.
 **Cholesterol code mapping:**
-| Code | TC Range (mg/dL) |
-|---|---|
-| 0 | Non-lab (no TC data) |
-| 4 | < 155 |
-| 5 | 155 – 189 |
-| 6 | 190 – 227 |
-| 7 | 228 – 266 |
-| 8 | ≥ 267 |
+| Internal Category Index | WHO Standard (`mmol/L`) | Form Input Approx (`mg/dL`) |
+|---|---|---|
+| **0** | `< 4.0` | `< 155` |
+| **1** | `4.0 to < 5.0` | `155 to < 193` |
+| **2** | `5.0 to < 6.0` | `194 to < 232` |
+| **3** | `6.0 to < 7.0` | `232 to < 270` |
+| **4** | `≥ 7.0` | `≥ 271` |
 
 ### Trigger Events
 
