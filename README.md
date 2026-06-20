@@ -592,6 +592,19 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-remark` | Remark | Text |
 | `obs-appointment` | Appointment Date | Date (Ethiopian) |
 
+### Simplified Integration Path (For Bahmni Beginners)
+
+If you are new to Bahmni, you can still deploy these calculations without writing a full Angular app:
+
+1.  **Standard Fields**: Use the [Bahmni Form Builder (GUI)](https://bahmni.atlassian.net/wiki/spaces/BAH/pages/147128330/Form+Builder) to create a standard "DM/HTN Progress Note."
+2.  **Logic Injection**: Add a single "Custom Control" field in your form design specifically for the **CVD Risk Badge**.
+3.  **Copy-Paste Logic**: Copy the `calculateCVDRisk()` function and the `WHO_2019` arrays from this file into your Bahmni `form-conditions.js`.
+4.  **Field IDs**: Ensure the IDs you choose in the Form Builder match the IDs in our `dictConcepts` (e.g., `obs-sbp`, `obs-ldl`).
+
+This "Low-Code" approach allows the EMR to perform the math automatically while using Bahmni's built-in form-saving features.
+
+---
+
 ## Bahmni EMR Professional Integration Guide
 
 As this form moves from a high-fidelity prototype to a production clinical environment, the following architectural strategy ensures 100% preservation of all ad-hoc clinical logic (CVD Risks, Pediatric BP, GFR) and UI features.
