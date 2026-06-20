@@ -540,112 +540,555 @@ Additionally, `autoCalculateDyslipidemiaStatus()` runs directly on `obs-ldl` cha
 
 ## Integration Guide for Bahmni EMR
 
-### Concept Mapping
-
-Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended mapping:
-
-| Field ID | OpenMRS Concept (Suggested UUID) | Datatype |
-|---|---|---|
-| `search-dm` | Type of DM | Coded |
-| `search-htn` | Type of HTN | Coded |
-| `obs-htn-grade` | HTN Grade | Text |
-| `search-complic` | Complication(s) | Multi-select Coded |
-| `search-comorb` | Comorbidity | Multi-select Coded |
-| `obs-oral-bg-drugs` | Oral Hypoglycemic Drugs | Text |
-| `obs-dm-insulin` | DM (Insulin) | Text |
-| `obs-htn-treatment` | HTN Treatment | Text |
-| `obs-antiplatelet` | Antiplatelet | Text |
-| `obs-dyslipidemia` | Dyslipidemia | Text |
-| `obs-other-meds` | Other Medication | Text |
-| `obs-overall-adherence` | Drug Adherence | Text |
-| `obs-symptoms` | Recent Complaint | Text |
-| `search-risks` | Recent Risk Factors | Multi-select Coded |
-| `obs-sbp` | Systolic Blood Pressure | Numeric |
-| `obs-dbp` | Diastolic Blood Pressure | Numeric |
-| `obs-pulse` | Pulse Rate | Numeric |
-| `obs-weight` | Weight | Numeric |
-| `obs-height` | Height | Numeric |
-| `obs-bmi` | BMI | Calculated |
-| `obs-bmi-grading` | BMI Grading (WHO) | Text |
-| `obs-waist` | Waist Circumference | Numeric |
-| `obs-metabolic-risk` | Metabolic Risk | Text |
-| `obs-fbs` | FBS | Numeric |
-| `obs-rbs` | RBS | Numeric |
-| `obs-hga1c` | HgA1c | Numeric |
-| `obs-ketone` | Urine Ketone | Text |
-| `obs-albumin` | Urine Albumin (Protein) | Coded |
-| `obs-micro` | Urine Microscopic Findings | Text |
-| `obs-urine-prof` | 24-hr Urine Protein | Numeric |
-| `obs-creatinine` | Creatinine | Numeric |
-| `obs-gfr` | GFR | Calculated |
-| `obs-gfr-kdigo` | KDIGO Category | Text |
-| `obs-na` | Sodium | Numeric |
-| `obs-k` | Potassium | Numeric |
-| `obs-total-cholesterol` | Total Cholesterol | Numeric |
-| `obs-cvd-risk` | CVD Risk (WHO/ISH) | Calculated |
-| `obs-triglyceride` | Triglyceride | Numeric |
-| `obs-ldl` | LDL | Numeric |
-| `obs-ecg` | ECG | Text |
-| `obs-echo` | ECHO | Text |
-| `obs-fundoscopic` | Fundoscopic Finding | Text |
-| `obs-other-investigation` | Other Investigation | Text |
-| `obs-overall-assessment` | Overall Assessment | Text |
-| `dm-status` | DM Status | Coded |
-| `htn-status` | HTN Status | Coded |
-| `obs-complic-status` | Complication Status | Coded |
-| `obs-dyslipidemia-status` | Dyslipidemia Status | Coded |
-| `obs-comorb-status` | Comorbidity Status | Coded |
-| `obs-linked-to` | Linked To | Text |
-| `obs-linkage-note` | Linkage Note | Text |
-| `obs-consultation-to` | Consultation To | Text |
-| `obs-consultation-note` | Consultation Note | Text |
-| `obs-referral-to` | Referral To | Text |
-| `obs-referral-reason` | Referral Reason | Text |
-| `obs-remark` | Remark | Text |
-| `obs-appointment` | Appointment Date | Date (Ethiopian) |
-
-### Simplified Integration Path (For Bahmni Beginners)
-
-If you are new to Bahmni, you can still deploy these calculations without writing a full Angular app:
-
-1.  **Standard Fields**: Use the [Bahmni Form Builder (GUI)](https://bahmni.atlassian.net/wiki/spaces/BAH/pages/147128330/Form+Builder) to create a standard "DM/HTN Progress Note."
-2.  **Logic Injection**: Add a single "Custom Control" field in your form design specifically for the **CVD Risk Badge**.
-3.  **Copy-Paste Logic**: Copy the `calculateCVDRisk()` function and the `WHO_2019` arrays from this file into your Bahmni `form-conditions.js`.
-4.  **Field IDs**: Ensure the IDs you choose in the Form Builder match the IDs in our `dictConcepts` (e.g., `obs-sbp`, `obs-ldl`).
-
-This "Low-Code" approach allows the EMR to perform the math automatically while using Bahmni's built-in form-saving features.
+This guide provides a comprehensive, step-by-step pathway for deploying this DM/HTN Follow-up form into a production Bahmni EMR environment without losing any functionality. It covers both the **full-custom** approach (Custom Display Control, maximum fidelity) and the **rapid-deployment** approach (Standard HTML Form Entry + `form-conditions.js`).
 
 ---
 
-## Bahmni EMR Professional Integration Guide
+### Architecture Overview: Deployment Options
 
-As this form moves from a high-fidelity prototype to a production clinical environment, the following architectural strategy ensures 100% preservation of all ad-hoc clinical logic (CVD Risks, Pediatric BP, GFR) and UI features.
+| Approach | Effort | Preserves UI/UX | Recommended For |
+|---|---|---|---|
+| **A. Custom Display Control** (Angular Directive) | Medium-High | Full — badges, pills, glassmorphism | Teams wanting pixel-perfect parity with the prototype |
+| **B. Standard HTML Form Entry** (Velocity Template + `form-conditions.js`) | Low-Medium | Logic preserved, simplified UI | Teams needing rapid deployment with auto-calculations |
+| **C. Bahmni Form Builder** (GUI) | Low | Minimal — only basic inputs | Quick prototyping, not recommended for production |
 
-### 1. Architectural Strategy: The Bridge Pattern
-Do not use the standard Bahmni Form Builder for the complex calculation blocks. Instead, use the **Bahmni Custom Display Control** methodology to preserve the high-fidelity UI and "WOW" factor.
+> **Recommendation**: Use **Option A** for the final production deployment. Use **Option B** as an interim step to validate clinical logic in Bahmni before committing to the full custom build.
 
-*   **Logic Layer (Angular Service)**: Move all math functions (`calculateCVDRisk`, `calculateHTNGrade`, `classifyPediatricBP`) into a standalone JS file: `/var/www/bahmni_config/openmrs/apps/clinical/customControl/js/cvdCalculationService.js`.
-*   **UI Layer (Custom Directive)**: Create an AngularJS directive that wraps this HTML form, binding UI elements directly to the `$scope.observations` object.
+---
 
-### 2. Implementation Steps
+### Phase 1: Concept Mapping and Metadata Setup
 
-| Step | Action | Description |
-| :--- | :--- | :--- |
-| **1** | **Concept Mapping** | Map all `obs-` IDs (including hidden ones like `obs-pregnant`, `obs-conceive`) to their OpenMRS Concept UUIDs. |
-| **2** | **Logic Migration** | Move the WHO 2019 Matrix Arrays and calculation logic into the `cvdCalculator` service. |
-| **3** | **CDS Integration** | Wire the **Statin Recommendation Logic** into Bahmni's `form-conditions.js` to trigger real-time expert advice. |
-| **4** | **UI Persistence** | Bind the dynamic risk badges to hidden input fields to ensure calculated results are saved to the OpenMRS database for reporting. |
+Before writing any code, every `obs-*` field must be registered in OpenMRS as a concept. Below is the complete mapping table with recommended datatypes and answer sets.
 
-### 3. Preservation of Key Features
+#### Core Observation Concepts
 
-*   **CVD Risk (WHO 2019)**: Logic stays in the Angular Service; Matrix arrays are kept in a separate constant.
-*   **Pediatric BP**: Handled by the same service using the patient's birthdate and height-for-age z-score logic.
-*   **Statin Suggestion**: Real-time calculation triggers an inline alert box (`cvd-risk-suggestion`) based on the latest 2019 guidelines.
-*   **Glassmorphism/UI**: All CSS styles from this prototype can be moved into Bahmni's `custom.css`.
+| Field ID | Recommended Concept Name | Datatype | Units / Answer Set |
+|---|---|---|---|
+| `obs-sbp` | Systolic Blood Pressure | Numeric | mmHg |
+| `obs-dbp` | Diastolic Blood Pressure | Numeric | mmHg |
+| `obs-pulse` | Pulse Rate | Numeric | bpm |
+| `obs-weight` | Weight | Numeric | kg |
+| `obs-height` | Height | Numeric | cm |
+| `obs-bmi` | BMI | Numeric | Calculated |
+| `obs-bmi-grading` | BMI Grading (WHO) | Text | — |
+| `obs-waist` | Waist Circumference | Numeric | cm |
+| `obs-metabolic-risk` | Metabolic Risk (Waist) | Text | — |
+| `obs-fbs` | Fasting Blood Sugar | Numeric | mg/dL |
+| `obs-rbs` | Random Blood Sugar | Numeric | mg/dL |
+| `obs-hga1c` | Hemoglobin A1c | Numeric | % |
+| `obs-ketone` | Urine Ketone | Text | — |
+| `obs-albumin` | Urine Albumin | Coded | Nil, Trace, 1+, 2+, 3+, 4+ |
+| `obs-micro` | Urine Microscopic Findings | Text | — |
+| `obs-urine-prof` | 24hr Urine Protein | Numeric | mg/24h |
+| `obs-creatinine` | Serum Creatinine | Numeric | mg/dL |
+| `obs-gfr` | eGFR (CKD-EPI 2021) | Numeric | Calculated |
+| `obs-gfr-kdigo` | KDIGO Category | Text | — |
+| `obs-na` | Serum Sodium | Numeric | mEq/L |
+| `obs-k` | Serum Potassium | Numeric | mEq/L |
+| `obs-total-cholesterol` | Total Cholesterol | Numeric | mg/dL |
+| `obs-triglyceride` | Triglyceride | Numeric | mg/dL |
+| `obs-ldl` | LDL Cholesterol | Numeric | mg/dL |
+| `obs-ecg` | ECG Finding | Text | — |
+| `obs-echo` | ECHO Finding | Text | — |
+| `obs-fundoscopic` | Fundoscopic Finding | Text | — |
+| `obs-other-investigation` | Other Investigation | Text | — |
+| `obs-overall-assessment` | Overall Assessment | Text | — |
+| `obs-symptoms` | Recent Complaint | Text | — |
+| `obs-htn-grade` | HTN Grade | Text | — |
+| `obs-cvd-risk` | CVD Risk (WHO 2019) | Numeric | Calculated — percentage |
+| `obs-cvd-risk-badge` | CVD Risk Level | Text | Calculated — "<5%", "5% to <10%", etc. |
+| `obs-overall-adherence` | Drug Adherence | Text | Good / Poor |
+| `obs-pregnant` | Pregnancy Status | Coded | Yes, No |
+| `obs-conceive` | Planning to Conceive | Coded | Yes, No |
 
-> [!IMPORTANT]
-> **Data Integrity**: By mapping interactive UI fields to OpenMRS Concept UUIDs, you ensure that even though the UI is "custom," the clinical data remains structured, searchable, and interoperable across the EMR.
+#### Coded / Multi-Select Concepts
 
+| Field ID | Recommended Concept Name | Datatype | Answer Set / Concept Set |
+|---|---|---|---|
+| `search-dm` | Type of Diabetes Mellitus | Coded | Type 1 DM, Type 2 DM, Gestational, MODY, Other Secondaries |
+| `search-htn` | Type of Hypertension | Coded | Essential, Secondary |
+| `search-complic` | DM/HTN Complications | Multi-select Coded | Concept set: Diabetic Retinopathy, Diabetic Neuropathy, CKD, HHD, etc. |
+| `search-comorb` | Comorbidities | Multi-select Coded | Concept set: BPH, Gout, Asthma, COPD, etc. |
+| `search-risks` | Cardiovascular Risk Factors | Multi-select Coded | Concept set: Tobacco Use, Physical Inactivity, Excessive Alcohol, Poor Diet, Khat |
+| `dm-status` | DM Status | Coded | Controlled, Uncontrolled |
+| `htn-status` | HTN Status | Coded | Controlled, Uncontrolled |
+| `obs-dyslipidemia-status` | Dyslipidemia Status | Coded | Controlled, Uncontrolled, Unknown |
+| `obs-complic-status` | Complication Status | Coded | Same, Corrected, Controlled, Uncontrolled, Unknown |
+| `obs-comorb-status` | Comorbidity Status | Coded | Same, Corrected, Controlled, Uncontrolled, Unknown |
+
+#### Medication / Free-Text Concepts
+
+| Field ID | Recommended Concept Name | Datatype | Notes |
+|---|---|---|---|
+| `obs-oral-bg-drugs` | Oral Hypoglycemic Drugs | Text | Same concept used for `*-copy` fields |
+| `obs-dm-insulin` | Insulin Regimen | Text | Same concept used for `*-copy` fields |
+| `obs-htn-treatment` | HTN Treatment | Text | Same concept used for `*-copy` fields |
+| `obs-antiplatelet` | Antiplatelet Therapy | Text | Same concept used for `*-copy` fields |
+| `obs-dyslipidemia` | Dyslipidemia Treatment | Text | Same concept used for `*-copy` fields |
+| `obs-other-meds` | Other Medications | Text | Same concept used for `*-copy` fields |
+| `obs-linked-to` | Linked To | Text | — |
+| `obs-linkage-note` | Linkage Note | Text | — |
+| `obs-consultation-to` | Consultation Referral | Text | — |
+| `obs-consultation-note` | Consultation Note | Text | — |
+| `obs-referral-to` | Referral To | Text | — |
+| `obs-referral-reason` | Referral Reason | Text | — |
+| `obs-remark` | Clinical Remark | Text | — |
+| `obs-appointment` | Follow-up Appointment Date | Date | Ethiopian calendar with Gregorian backing-store |
+
+> **Record the UUID** assigned by OpenMRS for each concept. These UUIDs are referenced in the form template and `form-conditions.js`.
+
+> **Tip for `*-copy` fields**: Medication copy fields (e.g., `obs-oral-bg-drugs-copy`) share the **same concept UUID** as their source. Bahmni distinguishes them by section context (Treatment Given vs. Active Plan). No separate concept registration is needed.
+
+---
+
+### Phase 2: Code Extraction and Modularisation
+
+The prototype is a single monolithic HTML file (~3948 lines). For Bahmni, split it into this file structure within `bahmni_config/openmrs/apps/clinical/`:
+
+```
+customDisplayControl/
+├── js/
+│   ├── dmHtnCalculationService.js      # All auto-calculation functions
+│   ├── dmHtnCdsRules.js                # Clinical decision support (statin suggestion)
+│   └── ethiopianDatePicker.js          # Ethiopian calendar (optional; prefer Bahmni native)
+├── templates/
+│   └── dmHtnFollowupTemplate.html      # The form HTML (AngularJS version)
+├── css/
+│   └── dmHtnFollowup.css               # All form-specific styles
+└── dmHtnFollowup.json                  # Custom Display Control manifest
+
+form-conditions.js                      # Condition-level CDS rules (global)
+custom.css                              # Global style overrides
+```
+
+#### 2.1 Extract the Calculation Service
+
+Create `dmHtnCalculationService.js` as an **AngularJS factory**. Move these functions into it:
+
+| Prototype Function | Service Method | Purpose |
+|---|---|---|
+| `WHO_2019_NONLAB_AFRE`, `WHO_2019_LAB_DM_AFRE`, `WHO_2019_LAB_NONDM_AFRE` | `CVD_RISK_TABLES` constant | WHO 2019 lookup tables (preserve verbatim) |
+| `getAgeGroup()`, `getSBPCategory()`, `getBMICategory()`, `getTCCategory()` | Used internally by `computeCvdRisk()` | Lookup helpers |
+| `calculateCVDRisk()` | `computeCvdRisk(obs)` | Returns `{ risk, level, label, badgeClass }` |
+| `getCVDRiskLabel()`, `getCVDBadgeClass()` | `formatCvdRisk(level)` | Returns label string + CSS class |
+| `calculateHTNGrade()` | `computeHtnGrade(age, sbp, dbp, height, sex)` | Returns grade string |
+| `autoCalculateBMI()` | `computeBmi(weightKg, heightCm)` | Returns `{ bmi, grading }` |
+| `autoCalculateGFR()` | `computeGfr(creatinine, age, sex)` | Returns `{ gfr, kdigo, kdigoColor }` |
+| `classifyPediatricBP()` | `computePediatricBp(age, sex, sbp, dbp, heightCm)` | Returns category with threshold details |
+| `autoCalculateDyslipidemiaStatus()` | `computeDyslipidemiaStatus(ldl)` | Returns Controlled / Uncontrolled / Unknown |
+| `autoCalculateWaistRisk()` | `computeWaistRisk(waistCm, sex)` | Returns Normal / Increased / Greatly Increased |
+| `calculateHeightZScore()` | `computeHeightZScore(age, sex, heightCm)` | Returns z-score using CDC LMS |
+
+**Example service skeleton:**
+
+```javascript
+// dmHtnCalculationService.js
+angular.module('bahmni.clinical')
+    .factory('dmHtnCalculationService', ['$http', function($http) {
+
+        var CVD_RISK_TABLES = {
+            NONLAB_AFRE: /* paste WHO_2019_NONLAB_AFRE from prototype */,
+            LAB_DM_AFRE: /* paste WHO_2019_LAB_DM_AFRE from prototype */,
+            LAB_NONDM_AFRE: /* paste WHO_2019_LAB_NONDM_AFRE from prototype */
+        };
+
+        function computeCvdRisk(obs) {
+            var age = obs.patient.age;
+            var sex = obs.patient.gender;
+            var sbp = obs.get('obs-sbp');
+            var tc = obs.get('obs-total-cholesterol');
+            var dmType = obs.get('search-dm');
+            var smoker = obs.hasRiskFactor('Tobacco');
+            var weight = obs.get('obs-weight');
+            var height = obs.get('obs-height');
+
+            // Replicate the exact logic from prototype's calculateCVDRisk()
+            // using the CVD_RISK_TABLES above.
+            // ...
+
+            return { risk: riskPct, level: level, label: label, badgeClass: badgeClass };
+        }
+
+        return {
+            computeCvdRisk: computeCvdRisk,
+            computeBmi: computeBmi,
+            computeGfr: computeGfr,
+            computeHtnGrade: computeHtnGrade,
+            computePediatricBp: computePediatricBp,
+            computeDyslipidemiaStatus: computeDyslipidemiaStatus,
+            computeWaistRisk: computeWaistRisk
+        };
+    }]);
+```
+
+> **Critical**: The WHO 2019 lookup arrays must be copied **verbatim** from the prototype. These are the only source of truth. Any transcription error will produce incorrect risk scores.
+
+#### 2.2 Extract Clinical Decision Support Rules
+
+Move the statin suggestion and dyslipidemia auto-status logic into `form-conditions.js`:
+
+```javascript
+// form-conditions.js
+// Deploy to: /var/www/bahmni_config/openmrs/apps/clinical/form-conditions.js
+conditionFunctions = {
+
+    'statin-suggestion': function(obs) {
+        var age = obs.patient.age;
+        var dmType = obs.get('search-dm');
+        var dyslipidemia = obs.get('obs-dyslipidemia');
+        var dyslipidemiaCopy = obs.get('obs-dyslipidemia-copy');
+        var tc = obs.get('obs-total-cholesterol');
+        var ldl = obs.get('obs-ldl');
+        var cvdRisk = obs.get('obs-cvd-risk');
+
+        var noDysTx = !dyslipidemia && !dyslipidemiaCopy;
+        if (!noDysTx) return null;
+
+        // Condition 1: Age >= 40 + Type 2 DM
+        if (age >= 40 && dmType === 'Type 2 Diabetes Mellitus') {
+            return 'Consider starting statin targeting LDL<70 after treatment followup if no complication associated; If complication LDL<55';
+        }
+
+        // Condition 2: Elevated CVD risk
+        if (cvdRisk !== null) {
+            var isLab = obs.get('obs-total-cholesterol') > 0;
+            if ((isLab && cvdRisk >= 20) || (!isLab && cvdRisk >= 10)) {
+                return 'Consider starting statin targeting LDL<70 after treatment followup if no complication associated; If complication LDL<55';
+            }
+        }
+
+        // Condition 3: Elevated lipids
+        if ((tc !== null && tc > 200) || (ldl !== null && ldl >= 130)) {
+            return 'Consider starting statin targeting LDL<70 after treatment followup if no complication associated; If complication LDL<55';
+        }
+
+        return null;
+    },
+
+    'auto-dyslipidemia-status': function(obs) {
+        var ldl = obs.get('obs-ldl');
+        var dysTx = obs.get('obs-dyslipidemia-copy');
+        if (!dysTx) return null;
+        if (ldl === null || ldl === undefined) return 'Unknown';
+        return ldl < 70 ? 'Controlled' : 'Uncontrolled';
+    },
+
+    'pregnancy-row-visibility': function(obs) {
+        var age = obs.patient.age;
+        var sex = obs.patient.gender;
+        return (sex === 'F' && age >= 15 && age <= 45) ? 'visible' : 'hidden';
+    }
+};
+```
+
+> `form-conditions.js` runs client-side in Bahmni's observation model. Use `obs.get('field-id')` to read current values. Return values can populate read-only fields or trigger CDS alerts via `conditions.alert()`.
+
+#### 2.3 Build the Angular Form Template
+
+Convert the HTML `<table>` layout to an AngularJS template. Replace all inline event handlers with Angular directives:
+
+| Prototype Pattern | AngularJS Replacement |
+|---|---|
+| `<input oninput="allowOnlyInteger(this); calculateCVDRisk()">` | `<input ng-change="vm.calculateCvdRisk()" ng-keyup="vm.allowOnlyInteger($event)">` |
+| `<button onclick="toggleBtn(this)">` | `<button ng-click="vm.toggleBtn('groupName', $event)">` |
+| `style="display:none"` + JS toggle | `<tr ng-show="vm.isConditionMet()">` |
+| `document.getElementById('obs-sbp').value` | `vm.obs.sbp` (via `ng-model`) |
+| `Array.from(...).forEach(...)` DOM manipulation | `ng-repeat` + `vm.pills` array |
+
+**Structural patterns to follow:**
+
+```html
+<!-- Auto-calculated read-only field (stores to DB) -->
+<input type="text" id="obs-bmi" ng-model="vm.obs.bmi" readonly
+       class="calculated-field" concept="'BMI UUID'" />
+
+<!-- Conditional row visibility -->
+<tr ng-show="vm.obs.sbp || vm.obs.dbp">
+    <td>HTN Grade</td>
+    <td>
+        <input type="text" id="obs-htn-grade" ng-model="vm.obs.htnGrade" readonly
+               concept="'HTN Grade UUID'" />
+    </td>
+</tr>
+
+<!-- Multi-select pill box as ng-repeat -->
+<div class="pill-container">
+    <div class="pill" ng-repeat="pill in vm.pills.complic track by $index">
+        {{pill.label}}
+        <span class="remove-pill" ng-click="vm.removePill('complic', $index)">&times;</span>
+    </div>
+</div>
+
+<!-- CVD Risk badge with statin suggestion -->
+<div ng-show="vm.cvdRisk.risk !== null">
+    <span class="risk-badge {{vm.cvdRisk.badgeClass}}">{{vm.cvdRisk.label}}</span>
+    <div ng-show="vm.statinSuggestion" class="statin-suggestion">
+        {{vm.statinSuggestion}}
+    </div>
+</div>
+```
+
+> **Key rule**: Every `obs-*` field that needs to persist to the database must have a `concept="'uuid'"` attribute. Read-only calculated fields also need this — Bahmni will store the calculated value as an observation.
+
+---
+
+### Phase 3: Custom Display Control Implementation (Full Fidelity)
+
+For pixel-perfect parity with the prototype, implement a **Custom Display Control**. This gives complete control over the HTML/CSS/JS rendered inside a Bahmni form section.
+
+#### 3.1 Create the Manifest
+
+```json
+// dmHtnFollowup.json — deployed to customDisplayControl/
+{
+    "name": "DM/HTN Follow-up Form",
+    "displayControl": "dmHtnFollowup",
+    "template": "/customDisplayControl/templates/dmHtnFollowupTemplate.html",
+    "controller": "/customDisplayControl/js/dmHtnFollowupController.js",
+    "styles": [
+        "/customDisplayControl/css/dmHtnFollowup.css"
+    ],
+    "requiredPrivilege": "app:clinical",
+    "conceptSet": "DM/HTN Follow-up Set UUID"
+}
+```
+
+#### 3.2 Write the Controller
+
+```javascript
+// dmHtnFollowupController.js
+angular.module('bahmni.clinical')
+    .controller('dmHtnFollowupController', ['$scope', 'dmHtnCalculationService',
+        function($scope, calculationService) {
+
+            var vm = this;
+            vm.obs = $scope.observations || {};
+            vm.pills = { complic: [], comorb: [], risks: [] };
+
+            // Recalculate whenever observations change
+            $scope.$watch('observations', function(newObs) {
+                if (!newObs) return;
+                vm.cvdRisk = calculationService.computeCvdRisk(newObs);
+                vm.statinSuggestion = computeStatinSuggestion(newObs);
+                vm.htnGrade = calculationService.computeHtnGrade(
+                    newObs.patient.age,
+                    newObs.get('obs-sbp'),
+                    newObs.get('obs-dbp')
+                );
+                // ... bind all auto-calculations ...
+            }, true);
+
+            vm.toggleBtn = function(groupName, $event) {
+                // Radio/checkbox toggle logic matching prototype
+            };
+
+            vm.addPill = function(type, value) {
+                vm.pills[type].push({ label: value });
+                // Also persist as child obs in the obs group
+            };
+
+            vm.removePill = function(type, index) {
+                vm.pills[type].splice(index, 1);
+                // Remove child obs from obs group
+            };
+        }
+    ]);
+```
+
+#### 3.3 Register in Bahmni Configuration
+
+Add to `bahmni_config/openmrs/apps/clinical/extension.json`:
+
+```json
+{
+    "id": "dmHtnFollowupForm",
+    "extensionPointId": "org.bahmni.patient.search",
+    "type": "form",
+    "extensionParams": {
+        "formType": "DM/HTN Follow-up",
+        "formUrl": "/customDisplayControl/dmHtnFollowup.json"
+    }
+}
+```
+
+---
+
+### Phase 4: Rapid Deployment via Standard HTML Form Entry (Lower Fidelity)
+
+If a Custom Display Control is not immediately feasible, deploy using **Velocity Template + `form-conditions.js`**. This preserves all auto-calculations but replaces the custom pill and badge UI with standard HTML inputs.
+
+#### 4.1 Velocity Template Structure
+
+```velocity
+## /var/www/bahmni_config/openmrs/apps/clinical/forms/dmHtnFollowup.vm
+<script src="/openmrs/scripts/form-conditions.js"></script>
+<script src="/customDisplayControl/js/dmHtnCalculationService.js"></script>
+
+<table>
+    <tr>
+        <td><label>Type of DM</label></td>
+        <td>
+            <select id="search-dm" concept="Type of DM UUID"
+                    onchange="calculateCvdRisk()">
+                <option value="">— Select —</option>
+                <option value="Type 1 Diabetes Mellitus">Type 1</option>
+                <option value="Type 2 Diabetes Mellitus">Type 2</option>
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td><label>Systolic BP</label></td>
+        <td>
+            <input type="text" id="obs-sbp" concept="Systolic BP UUID"
+                   oninput="allowOnlyInteger(this); calculateCvdRisk(); calculateHtnGrade();" />
+        </td>
+    </tr>
+    <!-- Hidden calculated fields -->
+    <tr style="display:none">
+        <td><input type="hidden" id="obs-bmi" concept="BMI UUID" /></td>
+    </tr>
+    <tr style="display:none">
+        <td><input type="hidden" id="obs-cvd-risk" concept="CVD Risk UUID" /></td>
+    </tr>
+</table>
+```
+
+#### 4.2 What Works and What Doesn't
+
+| Feature | Standard Form Entry | Workaround |
+|---|---|---|
+| Auto-calculations (BMI, GFR, CVD risk) | Yes — via `form-conditions.js` | Store as hidden obs |
+| Statin suggestion text | Partial | Render as read-only text field |
+| Multi-select pills | No | Use `<select multiple>` or checkbox group |
+| Color-coded risk badges | No | Use text labels ("High Risk") |
+| Pregnancy row logic | Yes — via Velocity `#if` | `#if($patient.age >= 15 && $patient.age <= 45 && $patient.gender == 'F')` |
+| Ethiopian date picker | No | Use Bahmni's built-in date picker |
+| MMAS-4 adherence modal | Partial | Render as inline question set |
+| Glassmorphism / custom CSS | No | Limited by Bahmni's iframe sandbox |
+
+---
+
+### Phase 5: Module Integration Points
+
+#### 5.1 Appointment Scheduling Integration
+
+Wire `obs-appointment-gregorian` to the Bahmni Appointment Scheduling API:
+
+```javascript
+// In your controller's save handler
+function onFormSave() {
+    var appointmentDate = $scope.observations.get('obs-appointment-gregorian');
+    if (!appointmentDate) return;
+
+    Bahmni.Appointments.create({
+        patientUuid: $scope.patient.uuid,
+        providerUuid: $scope.session.currentProvider.uuid,
+        serviceUuid: 'DM/HTN Follow-up Service UUID',
+        startDateTime: appointmentDate,
+        endDateTime: moment(appointmentDate).add(30, 'minutes').toISOString(),
+        appointmentKind: 'FollowUp',
+        notes: 'DM/HTN scheduled follow-up'
+    }).then(function(response) {
+        // Update obs-appointment with the appointment UUID for cross-reference
+    });
+}
+```
+
+#### 5.2 MMAS-4 Adherence as Structured Observations
+
+Register four concepts for the MMAS-4 questions so responses are queryable:
+
+| Field ID | Concept Name | Answer Set |
+|---|---|---|
+| `mmas4-q1` | Adherence: Forgetfulness | Yes / No |
+| `mmas4-q2` | Adherence: Carelessness | Yes / No |
+| `mmas4-q3` | Adherence: Feeling Better | Yes / No |
+| `mmas4-q4` | Adherence: Feeling Worse | Yes / No |
+
+The calculated composite score ("Good" / "Poor") is stored in `obs-overall-adherence`.
+
+#### 5.3 Multi-Select Data via Obs Groups
+
+Each pill selection should be stored as a child observation within an **Obs Group**:
+
+```javascript
+function addPillToObsGroup(groupConceptUuid, selectedConceptUuid) {
+    var obsGroup = {
+        concept: { uuid: groupConceptUuid },
+        groupMembers: [{
+            concept: { uuid: selectedConceptUuid },
+            value: true
+        }]
+    };
+    $scope.observations.push(obsGroup);
+}
+```
+
+This ensures each complication, comorbidity, or risk factor is stored as structured, queryable data rather than a concatenated text string.
+
+#### 5.4 CVD Risk Data for Analytics
+
+Store both the numeric risk (`obs-cvd-risk`) and the categorical label (`obs-cvd-risk-badge`) to enable:
+
+- Population-level CVD risk distribution reports
+- Risk-stratified cohort queries
+- Longitudinal risk tracking across encounters
+- Automated alert rules based on risk thresholds
+
+---
+
+### Phase 6: Testing and Validation Protocol
+
+Validate each feature by running identical inputs against both the prototype (open in browser) and the Bahmni-deployed form. Outputs must match exactly.
+
+| Test | Input | Expected Output |
+|---|---|---|
+| CVD Risk (Lab) | TC=240, SBP=145, age=55, M, non-smoker, DM=Type 2 | Risk = 18.3% (Orange: "10% to <20%") |
+| CVD Risk (Non-lab) | Clear TC, weight=75, height=170, same context | Risk from BMI-based lookup (Orange) |
+| Statin — DM + age | DM=Type 2, age≥40, no dyslipidemia tx | Suggestion visible |
+| Statin — Dyslipidemia tx entered | Add text to obs-dyslipidemia | Suggestion hidden |
+| Statin — High TC | TC > 200, no DM, no tx | Suggestion visible |
+| Statin — High LDL | LDL ≥ 130, no DM, no tx | Suggestion visible |
+| Pregnancy row | age=30, sex=F | Row visible |
+| Pregnancy hidden | age=50, sex=F | Row hidden |
+| Pediatric BP | age=8, sex=M, height=130, SBP=115, DBP=75 | AAP classification badge |
+| GFR | Creatinine=1.2, age=45, sex=F | eGFR + KDIGO grade |
+| MMAS-4 | Yes + 4 answers | Adherence = "Poor" |
+| Copy Last Observation | Save → modify → Copy | Fields restored (skip list respected) |
+| Appointment | Select Ethiopian date | Gregorian hidden value synced |
+| Reset | Click Add New | All fields cleared |
+
+---
+
+### Phase 7: Deployment Checklist
+
+- [ ] All concepts registered in OpenMRS with correct datatypes and answer sets
+- [ ] Concept UUIDs recorded and referenced in form configuration files
+- [ ] `dmHtnCalculationService.js` deployed and registered in Angular module
+- [ ] `form-conditions.js` deployed with statin + dyslipidemia rules
+- [ ] Custom Display Control manifest (`.json`) and controller deployed
+- [ ] Appointment scheduling API integration tested end-to-end
+- [ ] MMAS-4 hidden observation concepts created
+- [ ] Obs group concepts created for multi-select fields
+- [ ] All 14 test cases from Phase 6 pass against prototype
+- [ ] Cross-browser verified: Chrome, Firefox, Safari, Edge
+- [ ] Mobile-responsive layout confirmed on tablet and phone viewports
+- [ ] Calculated values persist in OpenMRS database and appear in visit history
+
+---
+
+### Deployment File Map
+
+| Artifact | Deployment Path |
+|---|---|
+| `dmHtnCalculationService.js` | `/var/www/bahmni_config/openmrs/apps/clinical/customDisplayControl/js/` |
+| `form-conditions.js` | `/var/www/bahmni_config/openmrs/apps/clinical/` |
+| `dmHtnFollowupTemplate.html` | `/var/www/bahmni_config/openmrs/apps/clinical/customDisplayControl/templates/` |
+| `dmHtnFollowupController.js` | `/var/www/bahmni_config/openmrs/apps/clinical/customDisplayControl/js/` |
+| `dmHtnFollowup.css` | `/var/www/bahmni_config/openmrs/apps/clinical/customDisplayControl/css/` |
+| `dmHtnFollowup.json` | `/var/www/bahmni_config/openmrs/apps/clinical/customDisplayControl/` |
+| `dmHtnFollowup.vm` (if using Option B) | `/var/www/bahmni_config/openmrs/apps/clinical/forms/` |
+| `extension.json` (amendment) | `/var/www/bahmni_config/openmrs/apps/clinical/` |
 
 ---
 
