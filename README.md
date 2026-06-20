@@ -205,9 +205,12 @@ This section contains the **current encounter treatment plan**. It is always vis
 
 | Field ID | Type | Behavior |
 |---|---|---|
-| `obs-appointment` | Read-only (Ethiopian calendar — Quota Based Appointment Concept) | Displays selected date in E.C. format |
+| `obs-appointment` | Read-only (Ethiopian calendar) | Displays selected follow-up date in E.C. format |
 | `obs-appointment-gregorian` | Hidden | Stores Gregorian equivalent for Bahmni interoperability |
 | Picker | Custom calendar widget | Restricts to today + future dates only. Saturdays, Sundays, and Ethiopian full holidays are disabled |
+
+> [!IMPORTANT]
+> The `obs-appointment` field **must** be mapped to the pre-existing **Quota-Based Appointment** concept configured within the Bahmni EMR appointment scheduling module. This integration ensures that each scheduled follow-up date is validated against the facility's appointment quota limits, preventing overbooking and enabling streamlined patient flow management. The Ethiopian date picker feeds directly into this quota-enforced slot allocation system via the hidden Gregorian conversion field, which serves as the interoperability bridge between the form's calendar widget and Bahmni's downstream scheduling services.
 
 ---
 
@@ -783,8 +786,8 @@ Each field ID maps to an OpenMRS concept. Fields are organized by form section. 
 | `obs-referral-to` | Referral To | Text |
 | `obs-referral-reason` | Referral Reason | Text |
 | `obs-remark` | Remark | Text |
-| `obs-appointment` | Appointment Date — Quota Based Appointment Concept (Ethiopian Calendar) | Date |
-| `obs-appointment-gregorian` | Appointment Date (Gregorian, hidden — for EMR interoperability) | Date |
+| `obs-appointment` | Quota-Based Appointment Concept (Ethiopian Calendar) — maps to Bahmni's pre-configured appointment concept for quota-enforced scheduling | Date |
+| `obs-appointment-gregorian` | Appointment Date (Gregorian, hidden) — interoperability bridge for Bahmni appointment module | Date |
 
 ### Simplified Integration Path (For Bahmni Beginners)
 
