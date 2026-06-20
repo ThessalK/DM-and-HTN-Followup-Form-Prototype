@@ -156,8 +156,8 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 | `dm-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when FBS/RBS/HgA1c has data |
 | `htn-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when SBP/DBP has data |
 | `obs-dyslipidemia-status` | Select (Controlled/Uncontrolled/Unknown) | Auto-computed from LDL when dyslipidemia-copy has entry. Hidden row, shown when dyslipidemia-copy has data |
-| `obs-complic-status` | Select (Same/Corrected/Controlled/Uncontrolled/Unknown) | Shown only when complication pills exist |
-| `obs-comorb-status` | Select (Same/Corrected/Controlled/Uncontrolled/Unknown) | Shown only when comorbidity pills exist |
+| Dynamic complication rows | Each selected complication gets its own row with status select (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-complic`, added/removed dynamically |
+| Dynamic comorbidity rows | Each selected comorbidity gets its own row with status select (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-comorb`, added/removed dynamically |
 
 ### Treatment (Active Plan)
 
@@ -251,8 +251,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-gfr`, `row-gfr-kdigo` | Creatinine has a value (CKiD U25 also requires height for ≤25 yr) |
 | `row-dm-status` | FBS, RBS, or HgA1c has a value |
 | `row-htn-status` | SBP or DBP has a value |
-| `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
-| `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
+| `#disease-outcome-entries tr` | Created dynamically for each pill in `#pill-box-complic` and `#pill-box-comorb` |
 | `row-dyslipidemia-status` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry). Auto-hides when cleared |
 | `row-pregnant` | Gender = F and age 15–45 |
 | `row-conceive` | Pregnant answer = "No" |
@@ -622,9 +621,9 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-overall-assessment` | Overall Assessment | Text |
 | `dm-status` | DM Status | Coded |
 | `htn-status` | HTN Status | Coded |
-| `obs-complic-status` | Complication Status | Coded |
 | `obs-dyslipidemia-status` | Dyslipidemia Status | Coded |
-| `obs-comorb-status` | Comorbidity Status | Coded |
+| `outcome-status-complic-*` (dynamic) | Per-complication status (Same/Corrected/Controlled/Uncontrolled/Unknown) | Coded |
+| `outcome-status-comorb-*` (dynamic) | Per-comorbidity status (Same/Corrected/Controlled/Uncontrolled/Unknown) | Coded |
 | `obs-linked-to` | Linked To | Text |
 | `obs-linkage-note` | Linkage Note | Text |
 | `obs-consultation-to` | Consultation To | Text |
