@@ -963,7 +963,7 @@ Do not use the standard Bahmni Form Builder for the complex calculation blocks. 
 
 ## License
 
-This project is provided as a reference prototype for Bahmni HTML Form Entry implementations. No formal license is applied — use and adapt freely for clinical and educational purposes.
+This project is provided as a reference prototype for Bahmni HTML Form Entry implementations. Licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details. Use, modify, and distribute freely for clinical and educational purposes.
 
 ---
 
