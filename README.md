@@ -33,7 +33,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 11. [CVD Risk (WHO 2019 revised)](#cvd-risk-who-2019-revised)
 12. [Mobile Responsiveness](#mobile-responsiveness)
 13. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
-11. [Developer Notes](#developer-notes)
+14. [Developer Notes](#developer-notes)
 
 ---
 
@@ -42,7 +42,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 | Aspect | Detail |
 |---|---|
 | **Stack** | HTML5 + CSS3 + Vanilla ES6 JavaScript (no frameworks, no build tools) |
-| **File** | Single file: `DM_HTN_Followup.html` (~3575 lines) |
+| **File** | Single file: `DM_HTN_Followup.html` (~3943 lines) |
 | **State** | Client-side only (no persistence layer; save creates in-memory DOM snapshot columns) |
 | **Calendar** | Ethiopian calendar (E.C.) with Gregorian conversion for the appointment picker |
 | **Mock Data** | Hardcoded `dictConcepts` array simulates OpenMRS concept search |
@@ -99,7 +99,8 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 |---|---|---|
 | `obs-symptoms` | Textarea | Recent Complaint |
 | `search-risks` | Autocomplete + pills | Multi-select risk factors from `dictConcepts.risks`. Pills in `#pill-box-risks`. Drives lifestyle button visibility |
-| Pregnancy buttons | Button group | Shown only for females aged 15–45 (`row-pregnant`). Selecting "No" reveals conceive planning row (`row-conceive`) |
+| `obs-pregnant` | Button group (hidden input) | Shown only for females aged 15–45 (`row-pregnant`). Selecting "No" reveals conceive planning row (`row-conceive`). Value captured in hidden `obs-pregnant` |
+| `obs-conceive` | Button group (hidden input) | Shown when pregnant = "No" (`row-conceive`). Value captured in hidden `obs-conceive` |
 
 ### Objective Section
 
@@ -213,8 +214,9 @@ This section contains the **current encounter treatment plan**. It is always vis
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
 | `autoCalculateGFR()` | Creatinine input | `obs-gfr` (2021 CKD-EPI) + `obs-gfr-kdigo` (G1–G5) |
 | `calculateOverallAdherence()` | MMAS-4 modal save | `obs-overall-adherence`: Good / Poor |
-| `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, demographics | `row-cvd-risk` badge: <10% (green) / 10–20% (yellow) / 20–30% (orange) / 30–40% (red) / ≥40% (dark red) |
+| `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, dyslipidemia, LDL, demographics | CVD risk badge + statin suggestion (`#cvd-risk-suggestion`) |
 | `autoCalculateDyslipidemiaStatus()` | dyslipidemia-copy, LDL | `obs-dyslipidemia-status`: Controlled (LDL<70) / Uncontrolled (LDL≥70) / Unknown (no LDL) |
+| `togglePregnantRow()` | Age, gender | Shows/hides `row-pregnant` (F, age 15–45). Called on DOM load, `syncDemographics()`, and `setDemoSex()` |
 
 ### Validation Constraints
 
@@ -254,7 +256,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
 | `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
 | `row-dyslipidemia-status` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry). Auto-hides when cleared |
-| `row-pregnant` | Gender = F and age 15–45 |
+| `row-pregnant` | Gender = F and age 15–45. Re-evaluated dynamically via `togglePregnantRow()` on age/sex change |
 | `row-conceive` | Pregnant answer = "No" |
 | `row-overall-adherence` | Any pharmacologic field has content |
 | `row-linked-to`, `row-linkage-note` | `obs-linked-to` has content |
@@ -506,13 +508,13 @@ Each derived cell contains an exact risk percentage which maps to a risk level (
 `calculateCVDRisk()` runs whenever any of these inputs change:
 - `obs-sbp` (SBP)
 - `obs-total-cholesterol` (TC — switches lab/non-lab mode)
+- `obs-ldl` (LDL — re-evaluates statin suggestion)
 - `obs-weight` or `obs-height` (BMI for non-lab mode)
 - `search-dm` (diabetes status)
 - `pill-box-risks` pill add/remove (smoking status)
+- `obs-dyslipidemia` (Dyslipidemia treatment — re-evaluates statin suggestion)
 - `obs-dyslipidemia-copy` (visibility gate — show CVD Risk when empty, show Dyslipidemia Status when filled)
 - Demographics age/sex change
-
-Additionally, `autoCalculateDyslipidemiaStatus()` runs directly on `obs-ldl` changes to update the Dyslipidemia Disease Outcome status in real time.
 
 ---
 
@@ -570,7 +572,9 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-na` | Sodium | Numeric |
 | `obs-k` | Potassium | Numeric |
 | `obs-total-cholesterol` | Total Cholesterol | Numeric |
-| `obs-cvd-risk` | CVD Risk (WHO/ISH) | Calculated |
+| `obs-cvd-risk` | CVD Risk (WHO 2019 revised) | Calculated |
+| `obs-pregnant` | Are You Pregnant? | Coded (Yes/No) |
+| `obs-conceive` | Planning to Conceive | Coded (Yes/No) |
 | `obs-triglyceride` | Triglyceride | Numeric |
 | `obs-ldl` | LDL | Numeric |
 | `obs-ecg` | ECG | Text |

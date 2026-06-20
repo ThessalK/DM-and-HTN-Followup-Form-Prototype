@@ -958,7 +958,7 @@
 
                     <tr class="table-header" style="background:#ddd;">
                         <td colspan="2">Test Demographics <span style="font-weight:400;font-size:11px;color:#666;">(will
-                                be replaced by Bahmni patient data)</span></td>
+                                be replaced by Bahmni patient demographic data)</span></td>
                     </tr>
                     <tr>
                         <td class="label-cell">Age (years)</td>
@@ -1133,7 +1133,8 @@
                         <tr>
                             <td class="label-cell">Dyslipidemia</td>
                             <td class="input-cell">
-                                <textarea id="obs-dyslipidemia" style="width:200px;" oninput="checkPharm(); calculateCVDRisk()"></textarea>
+                                <textarea id="obs-dyslipidemia" style="width:200px;"
+                                    oninput="checkPharm(); calculateCVDRisk()"></textarea>
                                 <div class="icon-btn adherence-btn" title="Missed Dose? (MMAS-4)"
                                     onclick="openAdherenceModal('Dyslipidemia', this, 'obs-dyslipidemia')"
                                     style="color:#e67e22; font-weight:bold; font-size:14px; position:absolute; right:10px; top:10px;">
@@ -1194,6 +1195,7 @@
                                 <button type="button" class="bahmni-btn"
                                     onclick="togglePregnancyBtn(this, 'No')">No</button>
                             </div>
+                            <input type="hidden" id="obs-pregnant" value="">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
@@ -1201,12 +1203,14 @@
                         <td class="label-cell">Are you planning to conceive recently?</td>
                         <td class="input-cell">
                             <div class="btn-group">
-                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">Yes</button>
-                                <button type="button" class="bahmni-btn" onclick="toggleBtn(this)">No</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleConceiveBtn(this)">Yes</button>
+                                <button type="button" class="bahmni-btn" onclick="toggleConceiveBtn(this)">No</button>
                             </div>
+                            <input type="hidden" id="obs-conceive" value="">
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
-                        <!-- Objective Section -->
+                    </tr>
+                    <!-- Objective Section -->
                     <tr class="table-header" style="background:#ddd;">
                         <td colspan="2">Objective Section</td>
                     </tr>
@@ -1529,7 +1533,10 @@
                             <span id="cvd-risk-badge" class="risk-badge"></span>
                             <span style="font-size:11px;color:#888;margin-left:6px;">(Eastern Sub-Saharan Africa,
                                 lab/non-lab)</span>
-                            <div id="cvd-risk-suggestion" style="margin-top:4px;color:#c0392b;font-weight:bold;font-size:12px;display:none;">Consider starting statin targeting LDL&lt;70 after treatment followup if no complication associated; If complication LDL&lt;55</div>
+                            <div id="cvd-risk-suggestion"
+                                style="margin-top:4px;color:#c0392b;font-weight:bold;font-size:12px;display:none;">
+                                Consider starting statin targeting LDL&lt;70 after treatment followup if no complication
+                                associated; If complication LDL&lt;55</div>
                         </td>
                     </tr>
                     <tr>
@@ -1834,6 +1841,7 @@
 
         function togglePregnancyBtn(btn, val) {
             toggleBtn(btn);
+            document.getElementById('obs-pregnant').value = btn.classList.contains('selected') ? val : '';
             const conceiveRow = document.getElementById('row-conceive');
             if (val === 'No' && btn.classList.contains('selected')) {
                 conceiveRow.style.display = 'table-row';
@@ -1841,6 +1849,11 @@
                 conceiveRow.style.display = 'none';
                 conceiveRow.querySelectorAll('.bahmni-btn').forEach(b => b.classList.remove('selected'));
             }
+        }
+
+        function toggleConceiveBtn(btn) {
+            toggleBtn(btn);
+            document.getElementById('obs-conceive').value = btn.classList.contains('selected') ? btn.textContent.trim() : '';
         }
 
         function toggleExamForms(btn, val) {
@@ -2641,6 +2654,11 @@
             if (apptGreg) apptGreg.value = '';
             var apptNote = document.getElementById('appointment-date-note');
             if (apptNote) apptNote.innerText = 'Weekends and full holidays are inactive.';
+
+            var pregInput = document.getElementById('obs-pregnant');
+            if (pregInput) pregInput.value = '';
+            var concInput = document.getElementById('obs-conceive');
+            if (concInput) concInput.value = '';
 
             updateLifestyleButtons();
         }
