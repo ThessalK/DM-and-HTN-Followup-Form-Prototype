@@ -190,10 +190,22 @@ This section contains the **current encounter treatment plan**. It is always vis
 ### Appointment
 
 | Field ID | Type | Behavior |
-|---|---|---|
+|---|---|---|---|
 | `obs-appointment` | Read-only (Ethiopian calendar) | Displays selected date in E.C. format |
 | `obs-appointment-gregorian` | Hidden | Stores Gregorian equivalent for Bahmni |
 | Picker | Custom calendar widget | Restricts to today + future dates only. Saturdays, Sundays, and Ethiopian full holidays are disabled |
+
+**Bahmni Integration — Appointment Scheduling Workflow**
+
+In production deployment, the `obs-appointment` field must be wired to the **Bahmni Appointment Scheduling module**:
+
+| Capability | Implementation |
+|---|---|
+| **Follow-up visit creation** | On form save, submit `obs-appointment-gregorian` to the OpenMRS appointment API to create or update a scheduled appointment for the patient |
+| **Automated reminders** | Leverage Bahmni's SMS/notification service triggered by the appointment date |
+| **Bi-directional sync** | Pre-populate `obs-appointment` from the patient's existing scheduled appointment (if any) on form load; update on save |
+| **Conflict detection** | Cross-reference with the provider's existing appointments for the selected date/time before committing |
+| **Calendar integration** | Replace the prototype's standalone Ethiopian picker with Bahmni's native `datepicker` directive (which already supports the Ethiopian calendar and appointment context) |
 
 ---
 
