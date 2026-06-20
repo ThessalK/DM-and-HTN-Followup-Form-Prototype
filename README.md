@@ -33,7 +33,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 11. [CVD Risk (WHO 2019 revised)](#cvd-risk-who-2019-revised)
 12. [Mobile Responsiveness](#mobile-responsiveness)
 13. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
-14. [Developer Notes](#developer-notes)
+11. [Developer Notes](#developer-notes)
 
 ---
 
@@ -42,7 +42,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 | Aspect | Detail |
 |---|---|
 | **Stack** | HTML5 + CSS3 + Vanilla ES6 JavaScript (no frameworks, no build tools) |
-| **File** | Single file: `DM_HTN_Followup.html` (~3943 lines) |
+| **File** | Single file: `DM_HTN_Followup.html` (~3575 lines) |
 | **State** | Client-side only (no persistence layer; save creates in-memory DOM snapshot columns) |
 | **Calendar** | Ethiopian calendar (E.C.) with Gregorian conversion for the appointment picker |
 | **Mock Data** | Hardcoded `dictConcepts` array simulates OpenMRS concept search |
@@ -99,8 +99,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 |---|---|---|
 | `obs-symptoms` | Textarea | Recent Complaint |
 | `search-risks` | Autocomplete + pills | Multi-select risk factors from `dictConcepts.risks`. Pills in `#pill-box-risks`. Drives lifestyle button visibility |
-| `obs-pregnant` | Button group (hidden input) | Shown only for females aged 15–45 (`row-pregnant`). Selecting "No" reveals conceive planning row (`row-conceive`). Value captured in hidden `obs-pregnant` |
-| `obs-conceive` | Button group (hidden input) | Shown when pregnant = "No" (`row-conceive`). Value captured in hidden `obs-conceive` |
+| Pregnancy buttons | Button group | Shown only for females aged 15–45 (`row-pregnant`). Selecting "No" reveals conceive planning row (`row-conceive`) |
 
 ### Objective Section
 
@@ -214,9 +213,8 @@ This section contains the **current encounter treatment plan**. It is always vis
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
 | `autoCalculateGFR()` | Creatinine input | `obs-gfr` (2021 CKD-EPI) + `obs-gfr-kdigo` (G1–G5) |
 | `calculateOverallAdherence()` | MMAS-4 modal save | `obs-overall-adherence`: Good / Poor |
-| `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, dyslipidemia, LDL, demographics | CVD risk badge + statin suggestion (`#cvd-risk-suggestion`) |
+| `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, demographics | `row-cvd-risk` badge: <10% (green) / 10–20% (yellow) / 20–30% (orange) / 30–40% (red) / ≥40% (dark red) |
 | `autoCalculateDyslipidemiaStatus()` | dyslipidemia-copy, LDL | `obs-dyslipidemia-status`: Controlled (LDL<70) / Uncontrolled (LDL≥70) / Unknown (no LDL) |
-| `togglePregnantRow()` | Age, gender | Shows/hides `row-pregnant` (F, age 15–45). Called on DOM load, `syncDemographics()`, and `setDemoSex()` |
 
 ### Validation Constraints
 
@@ -256,7 +254,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
 | `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
 | `row-dyslipidemia-status` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry). Auto-hides when cleared |
-| `row-pregnant` | Gender = F and age 15–45. Re-evaluated dynamically via `togglePregnantRow()` on age/sex change |
+| `row-pregnant` | Gender = F and age 15–45 |
 | `row-conceive` | Pregnant answer = "No" |
 | `row-overall-adherence` | Any pharmacologic field has content |
 | `row-linked-to`, `row-linkage-note` | `obs-linked-to` has content |
@@ -508,13 +506,13 @@ Each derived cell contains an exact risk percentage which maps to a risk level (
 `calculateCVDRisk()` runs whenever any of these inputs change:
 - `obs-sbp` (SBP)
 - `obs-total-cholesterol` (TC — switches lab/non-lab mode)
-- `obs-ldl` (LDL — re-evaluates statin suggestion)
 - `obs-weight` or `obs-height` (BMI for non-lab mode)
 - `search-dm` (diabetes status)
 - `pill-box-risks` pill add/remove (smoking status)
-- `obs-dyslipidemia` (Dyslipidemia treatment — re-evaluates statin suggestion)
 - `obs-dyslipidemia-copy` (visibility gate — show CVD Risk when empty, show Dyslipidemia Status when filled)
 - Demographics age/sex change
+
+Additionally, `autoCalculateDyslipidemiaStatus()` runs directly on `obs-ldl` changes to update the Dyslipidemia Disease Outcome status in real time.
 
 ---
 
@@ -572,9 +570,7 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-na` | Sodium | Numeric |
 | `obs-k` | Potassium | Numeric |
 | `obs-total-cholesterol` | Total Cholesterol | Numeric |
-| `obs-cvd-risk` | CVD Risk (WHO 2019 revised) | Calculated |
-| `obs-pregnant` | Are You Pregnant? | Coded (Yes/No) |
-| `obs-conceive` | Planning to Conceive | Coded (Yes/No) |
+| `obs-cvd-risk` | CVD Risk (WHO/ISH) | Calculated |
 | `obs-triglyceride` | Triglyceride | Numeric |
 | `obs-ldl` | LDL | Numeric |
 | `obs-ecg` | ECG | Text |
@@ -596,18 +592,35 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 | `obs-remark` | Remark | Text |
 | `obs-appointment` | Appointment Date | Date (Ethiopian) |
 
-### Conversion Workflow
+## Bahmni EMR Professional Integration Guide
 
-1. Replace all field `id` and `name` attributes with Bahmni's `concept` naming convention
-2. Replace `dictConcepts` mock with actual OpenMRS concept search API calls (REST or `obs.concept`)
-3. Replace `patientDemographics` mock with actual Bahmni patient context (`$patient` in velocity template)
-4. Remove inline JS and bundle as external resource if needed
-5. Convert the Ethiopian date picker to use Bahmni's `datepicker` directive with Ethiopian calendar support
-6. **Angular Directives**: Wrap the calculations (CVD, Pediatric BP, GFR) in an Angular Service (`cvdCalculationService`). This allows you to call the exact same math logic across both the Clinician Dashboard and the Form Entry UI.
-7. **Clinical Decision Support (Statin Guidance)**: The `cvd-risk-suggestion` logic should be implemented using Bahmni's `form-conditions.js`. This allows the EMR to "pop up" the recommendation based on real-time observations exactly as the prototype does.
-8. **Concept Mapping**: Map your `obs-sbp`, `obs-ldl`, etc., to OpenMRS UUIDs.
-9. **MMAS-4 Storage**: The medication adherence scores can be stored as "Hidden Observations" to ensure the data is captured in the database even if the user only sees the calculated Score.
-10. **Custom Controls**: For the best results, use Bahmni **Custom Display Controls**. This will allow you to keep the "Look and Feel" (badges, colors, glassmorphism) exactly as it is in this HTML prototype.
+As this form moves from a high-fidelity prototype to a production clinical environment, the following architectural strategy ensures 100% preservation of all ad-hoc clinical logic (CVD Risks, Pediatric BP, GFR) and UI features.
+
+### 1. Architectural Strategy: The Bridge Pattern
+Do not use the standard Bahmni Form Builder for the complex calculation blocks. Instead, use the **Bahmni Custom Display Control** methodology to preserve the high-fidelity UI and "WOW" factor.
+
+*   **Logic Layer (Angular Service)**: Move all math functions (`calculateCVDRisk`, `calculateHTNGrade`, `classifyPediatricBP`) into a standalone JS file: `/var/www/bahmni_config/openmrs/apps/clinical/customControl/js/cvdCalculationService.js`.
+*   **UI Layer (Custom Directive)**: Create an AngularJS directive that wraps this HTML form, binding UI elements directly to the `$scope.observations` object.
+
+### 2. Implementation Steps
+
+| Step | Action | Description |
+| :--- | :--- | :--- |
+| **1** | **Concept Mapping** | Map all `obs-` IDs (including hidden ones like `obs-pregnant`, `obs-conceive`) to their OpenMRS Concept UUIDs. |
+| **2** | **Logic Migration** | Move the WHO 2019 Matrix Arrays and calculation logic into the `cvdCalculator` service. |
+| **3** | **CDS Integration** | Wire the **Statin Recommendation Logic** into Bahmni's `form-conditions.js` to trigger real-time expert advice. |
+| **4** | **UI Persistence** | Bind the dynamic risk badges to hidden input fields to ensure calculated results are saved to the OpenMRS database for reporting. |
+
+### 3. Preservation of Key Features
+
+*   **CVD Risk (WHO 2019)**: Logic stays in the Angular Service; Matrix arrays are kept in a separate constant.
+*   **Pediatric BP**: Handled by the same service using the patient's birthdate and height-for-age z-score logic.
+*   **Statin Suggestion**: Real-time calculation triggers an inline alert box (`cvd-risk-suggestion`) based on the latest 2019 guidelines.
+*   **Glassmorphism/UI**: All CSS styles from this prototype can be moved into Bahmni's `custom.css`.
+
+> [!IMPORTANT]
+> **Data Integrity**: By mapping interactive UI fields to OpenMRS Concept UUIDs, you ensure that even though the UI is "custom," the clinical data remains structured, searchable, and interoperable across the EMR.
+
 
 ---
 
@@ -626,4 +639,4 @@ Each field ID (`obs-*`) maps to an OpenMRS concept. Below is the recommended map
 
 ---
 
-*Maintained by ThessalK. Prototype for Bahmni HTML Form Entry conversion.*
+*Maintained by Dr Teselonke K. Prototype for Bahmni HTML Form Entry conversion.*
