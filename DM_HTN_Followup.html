@@ -1399,11 +1399,11 @@
                         </td>
                     </tr>
                     <tr id="row-cvd-risk" style="display:none;">
-                        <td class="label-cell">CVD Risk (WHO/ISH 2014)</td>
+                        <td class="label-cell">CVD Risk (WHO 2019)</td>
                         <td class="input-cell">
                             <span id="cvd-risk-value" style="font-weight:bold;"></span>
                             <span id="cvd-risk-badge" class="risk-badge"></span>
-                            <span style="font-size:11px;color:#888;margin-left:6px;">(AFR-E, lab/non-lab)</span>
+                            <span style="font-size:11px;color:#888;margin-left:6px;">(Eastern Sub-Saharan Africa, lab/non-lab)</span>
                         </td>
                     </tr>
                     <tr>
@@ -3277,83 +3277,116 @@
             }
         }
 
-        var WHO_AFRE = (function() {
-            var r = { "0":{},"1":{} };
-            dm0g0s0 = [
-                [40,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,0]],[160,[0,0,0,0,1,2]],[180,[1,1,1,2,3,4]]],
-                [50,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,1]],[160,[0,0,0,0,1,2]],[180,[1,1,1,2,3,4]]],
-                [60,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,1]],[160,[0,0,0,0,1,2]],[180,[2,1,2,2,3,4]]],
-                [70,[120,[0,0,0,0,0,1]],[140,[0,0,0,0,1,1]],[160,[0,0,0,1,1,2]],[180,[2,1,2,2,3,4]]]
-            ];
-            dm0g0s1 = [
-                [40,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,1]],[160,[0,0,0,1,2,3]],[180,[2,2,3,4,4,4]]],
-                [50,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,1]],[160,[0,0,0,1,2,3]],[180,[3,2,3,4,4,4]]],
-                [60,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,1,1]],[160,[1,0,1,1,2,3]],[180,[3,2,3,4,4,4]]],
-                [70,[120,[0,0,0,0,1,1]],[140,[0,0,1,1,1,2]],[160,[1,1,1,1,2,3]],[180,[3,2,3,4,4,4]]]
-            ];
-            dm0g1s0 = [
-                [40,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,1]],[160,[0,0,0,1,2,2]],[180,[1,1,2,3,4,4]]],
-                [50,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,1]],[160,[0,0,0,1,2,2]],[180,[1,1,2,3,4,4]]],
-                [60,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,1,1]],[160,[0,0,0,1,2,2]],[180,[2,1,2,3,4,4]]],
-                [70,[120,[0,0,0,0,1,1]],[140,[0,0,0,1,1,1]],[160,[1,0,1,1,2,2]],[180,[2,1,2,3,4,4]]]
-            ];
-            dm0g1s1 = [
-                [40,[120,[0,0,0,0,0,1]],[140,[0,0,0,0,1,3]],[160,[1,0,1,2,3,4]],[180,[3,3,4,4,4,4]]],
-                [50,[120,[0,0,0,0,0,1]],[140,[0,0,0,1,1,3]],[160,[1,1,1,2,3,4]],[180,[3,3,4,4,4,4]]],
-                [60,[120,[0,0,0,0,1,1]],[140,[0,0,0,1,1,3]],[160,[1,1,1,2,3,4]],[180,[3,3,4,4,4,4]]],
-                [70,[120,[0,0,0,1,1,1]],[140,[1,1,1,1,2,3]],[160,[1,1,2,2,3,4]],[180,[3,3,4,4,4,4]]]
-            ];
-            dm1g0s0 = [
-                [40,[120,[0,0,0,0,0,0]],[140,[0,0,0,0,0,1]],[160,[0,0,0,1,2,4]],[180,[2,2,3,4,4,4]]],
-                [50,[120,[0,0,0,0,0,1]],[140,[0,0,0,0,1,2]],[160,[0,0,0,1,2,4]],[180,[3,2,3,4,4,4]]],
-                [60,[120,[0,0,0,0,1,2]],[140,[0,0,1,1,2,2]],[160,[1,1,1,2,3,4]],[180,[3,3,4,4,4,4]]],
-                [70,[120,[0,0,0,1,1,2]],[140,[1,1,1,1,2,3]],[160,[2,1,2,2,3,4]],[180,[4,3,4,4,4,4]]]
-            ];
-            dm1g0s1 = [
-                [40,[120,[0,0,0,0,0,1]],[140,[0,0,0,0,2,2]],[160,[0,0,1,2,4,4]],[180,[2,3,3,4,4,4]]],
-                [50,[120,[0,0,0,0,0,1]],[140,[0,0,0,1,2,2]],[160,[1,1,1,2,4,4]],[180,[4,3,4,4,4,4]]],
-                [60,[120,[0,0,0,1,1,1]],[140,[1,1,1,2,2,2]],[160,[2,1,2,3,4,4]],[180,[4,4,4,4,4,4]]],
-                [70,[120,[1,1,1,1,1,3]],[140,[2,1,2,2,3,4]],[160,[3,2,3,4,4,4]],[180,[4,4,4,4,4,4]]]
-            ];
-            dm1g1s0 = [
-                [40,[120,[0,0,0,0,0,1]],[140,[0,0,0,0,1,2]],[160,[0,0,1,2,3,4]],[180,[3,3,4,4,4,4]]],
-                [50,[120,[0,0,0,0,0,1]],[140,[0,0,0,0,1,2]],[160,[0,0,1,2,3,4]],[180,[3,3,4,4,4,4]]],
-                [60,[120,[0,0,0,0,1,2]],[140,[0,0,1,1,2,2]],[160,[1,1,1,2,3,4]],[180,[4,3,4,4,4,4]]],
-                [70,[120,[0,0,1,1,1,2]],[140,[1,1,1,2,2,2]],[160,[2,1,2,3,3,4]],[180,[4,3,4,4,4,4]]]
-            ];
-            dm1g1s1 = [
-                [40,[120,[0,0,0,0,0,1]],[140,[0,0,0,1,2,4]],[160,[2,1,2,4,4,4]],[180,[4,4,4,4,4,4]]],
-                [50,[120,[0,0,0,0,1,1]],[140,[0,0,1,2,3,4]],[160,[2,1,3,4,4,4]],[180,[4,4,4,4,4,4]]],
-                [60,[120,[0,0,0,1,2,3]],[140,[1,1,1,2,3,4]],[160,[2,2,3,4,4,4]],[180,[4,4,4,4,4,4]]],
-                [70,[120,[1,1,1,2,3,3]],[140,[2,1,2,3,4,4]],[160,[3,2,3,4,4,4]],[180,[4,4,4,4,4,4]]]
-            ];
-            var combos = {
-                "0,0,0": dm0g0s0, "0,0,1": dm0g0s1,
-                "0,1,0": dm0g1s0, "0,1,1": dm0g1s1,
-                "1,0,0": dm1g0s0, "1,0,1": dm1g0s1,
-                "1,1,0": dm1g1s0, "1,1,1": dm1g1s1
-            };
-            for (var key in combos) {
-                var parts = key.split(",");
-                var dm = parts[0], gdr = parts[1], smk = parts[2];
-                if (!r[dm]) r[dm] = {};
-                if (!r[dm][gdr]) r[dm][gdr] = {};
-                if (!r[dm][gdr][smk]) r[dm][gdr][smk] = {};
-                var data = combos[key];
-                for (var ai = 0; ai < data.length; ai++) {
-                    var ageEntry = data[ai];
-                    var age = ageEntry[0];
-                    if (!r[dm][gdr][smk][age]) r[dm][gdr][smk][age] = {};
-                    for (var si = 1; si < ageEntry.length; si++) {
-                        var sbpEntry = ageEntry[si];
-                        var sbp = sbpEntry[0];
-                        var arr = sbpEntry[1];
-                        r[dm][gdr][smk][age][sbp] = arr;
-                    }
-                }
-            }
-            return r;
-        })();
+        // WHO 2019 CVD risk charts for Eastern Sub-Saharan Africa
+        // Non-laboratory model: BMI-based (no cholesterol, no diabetes needed)
+        // Each cell = 20 values: [M_NS×5BMI, M_S×5BMI, F_NS×5BMI, F_S×5BMI]
+        // BMI categories: <20, 20-24.9, 25-29.9, 30-34.9, >=35
+        // Index: sexIdx*10 + smkIdx*5 + bmiIdx where sexIdx:0=M,1=F, smkIdx:0=NS,1=S, bmiIdx:0-4
+        var WHO_2019_NONLAB_AFRE = [
+            [ // ageIdx 0: 40-44
+                [1,1,2,2,2,2,3,4,4,5,1,1,1,1,1,3,3,3,3,3],  // sbpIdx 0: <120
+                [2,2,2,3,3,3,4,5,6,7,1,2,2,2,2,3,4,4,4,5],  // sbpIdx 1: 120-139
+                [2,3,3,4,5,5,6,7,8,10,2,2,2,2,3,5,5,6,6,6], // sbpIdx 2: 140-159
+                [4,4,5,6,7,7,8,10,11,14,3,3,3,3,4,7,7,8,8,9], // sbpIdx 3: 160-179
+                [5,6,7,8,9,10,11,13,16,19,4,4,4,5,5,9,10,11,11,12] // sbpIdx 4: >=180
+            ],
+            [ // ageIdx 1: 45-49
+                [2,2,2,3,3,3,4,5,5,6,1,2,2,2,2,3,4,4,4,4],
+                [2,3,3,4,4,5,5,6,7,9,2,2,2,2,3,4,5,5,5,6],
+                [3,4,5,5,6,6,7,9,10,12,3,3,3,3,3,6,6,7,7,8],
+                [5,5,6,7,8,9,10,12,14,16,4,4,4,4,5,8,9,9,10,10],
+                [7,8,9,10,11,12,14,16,18,21,5,5,6,6,6,11,12,12,13,14]
+            ],
+            [ // ageIdx 2: 50-54
+                [3,3,3,4,4,4,5,6,7,8,2,2,2,2,3,4,5,5,5,6],
+                [3,4,4,5,6,6,7,8,9,10,3,3,3,3,3,6,6,6,7,7],
+                [5,5,6,7,8,8,9,11,12,14,4,4,4,4,5,8,8,8,9,9],
+                [6,7,8,9,11,11,12,14,16,18,5,5,5,6,6,10,10,11,12,12],
+                [9,10,11,12,14,14,16,18,21,24,7,7,7,8,8,13,14,14,15,16]
+            ],
+            [ // ageIdx 3: 55-59
+                [4,4,5,5,6,6,7,8,9,10,3,3,3,3,4,6,6,6,7,7],
+                [5,5,6,7,8,8,9,10,11,13,4,4,4,4,5,7,8,8,8,9],
+                [6,7,8,9,10,10,11,13,15,16,5,5,6,6,6,9,10,10,11,11],
+                [8,9,11,12,13,13,15,17,19,21,7,7,7,8,8,12,13,13,14,15],
+                [11,12,14,15,17,17,19,22,24,27,9,9,9,10,10,15,16,17,18,19]
+            ],
+            [ // ageIdx 4: 60-64
+                [5,6,6,7,8,8,9,10,11,12,4,4,5,5,5,7,8,8,8,9],
+                [7,7,8,9,10,10,11,12,14,15,5,6,6,6,6,9,10,10,11,11],
+                [9,10,11,12,13,13,14,16,17,19,7,7,7,8,8,12,12,13,13,14],
+                [11,12,14,15,16,17,18,20,22,24,9,9,9,10,10,15,15,16,16,17],
+                [14,16,17,19,21,21,23,25,28,30,11,11,12,12,13,18,19,20,20,21]
+            ],
+            [ // ageIdx 5: 65-69
+                [8,8,9,10,11,10,11,12,14,15,6,6,7,7,7,10,10,10,11,11],
+                [9,10,11,12,13,13,14,15,17,18,8,8,8,8,9,12,12,13,13,14],
+                [12,13,14,15,16,16,18,19,21,23,9,10,10,10,11,14,15,15,16,17],
+                [15,16,17,19,20,20,22,24,26,28,11,12,12,13,13,17,18,19,20,20],
+                [19,20,22,23,25,25,27,29,31,34,14,14,15,16,16,21,22,23,24,24]
+            ],
+            [ // ageIdx 6: 70-74
+                [11,11,12,13,14,14,15,16,17,18,9,9,9,10,10,12,13,13,14,14],
+                [13,14,15,16,17,17,18,19,21,22,10,11,11,11,12,15,15,16,16,17],
+                [16,17,18,20,21,21,22,23,25,27,12,13,13,14,14,18,18,19,19,20],
+                [20,21,22,24,25,25,26,28,30,32,15,15,16,16,17,21,22,22,23,24],
+                [24,25,27,29,30,30,32,34,36,38,18,18,19,20,20,25,26,26,27,28]
+            ]
+        ];
+
+        // WHO 2019 Laboratory-based model for Eastern Sub-Saharan Africa
+        // Two panels: People without Diabetes, People with Diabetes
+        // Each cell = 20 values: [M_NS×5TC, M_S×5TC, F_NS×5TC, F_S×5TC]
+        // TC categories: <4.0, 4.0-5.1, 5.2-6.1, 6.2-7.2, >=7.3 mmol/L
+        var WHO_2019_LAB_NONDM_AFRE = [
+            null, null, null, null, // age 40-44,45-49,50-54,55-59 (data TBD)
+            [ // ageIdx 4: 60-64
+                [5,6,6,7,8,7,8,9,11,12,4,4,5,5,5,7,7,8,8,9],
+                [7,7,8,9,10,9,11,12,14,15,5,5,6,6,7,8,9,9,10,11],
+                [8,9,10,12,13,12,13,15,17,19,6,7,7,8,8,10,11,12,12,13],
+                [11,12,13,15,17,15,17,19,21,24,8,8,9,9,10,13,13,14,15,16],
+                [14,15,17,19,21,19,21,24,27,30,10,10,11,11,12,15,16,17,18,20]
+            ],
+            [ // ageIdx 5: 65-69
+                [7,8,9,10,11,10,11,12,14,15,6,6,6,7,7,9,9,10,10,11],
+                [9,10,11,12,14,12,14,15,17,19,7,7,8,8,9,11,11,12,12,13],
+                [11,12,14,15,17,15,17,19,21,23,9,9,9,10,10,13,13,14,15,16],
+                [14,16,17,19,21,19,21,23,25,28,10,11,11,12,13,15,16,17,18,19],
+                [18,19,21,23,26,23,26,28,31,34,12,13,14,14,15,19,19,20,21,23]
+            ],
+            [ // ageIdx 6: 70-74
+                [10,11,12,14,15,13,14,16,17,19,8,9,9,9,10,12,12,12,13,14],
+                [12,14,15,16,18,16,17,19,21,23,10,10,11,11,12,14,14,15,15,16],
+                [15,17,18,20,22,19,21,23,25,28,12,12,13,13,14,16,17,17,18,19],
+                [18,20,22,24,26,23,25,28,30,33,14,14,15,15,16,19,20,20,21,22],
+                [22,24,27,29,32,28,30,33,36,39,16,17,17,18,19,22,23,24,25,26]
+            ]
+        ];
+
+        var WHO_2019_LAB_DM_AFRE = [
+            null, null, null, null, // age 40-44,45-49,50-54,55-59 (data TBD)
+            [ // ageIdx 4: 60-64
+                [8,9,10,12,13,12,13,15,17,19,7,8,8,9,9,12,12,13,14,15],
+                [10,11,13,15,17,15,17,19,21,24,9,9,10,11,11,14,15,16,17,19],
+                [13,14,16,18,21,19,21,23,26,30,11,11,12,13,14,17,18,20,21,22],
+                [16,18,20,23,26,23,26,29,32,36,13,14,15,16,17,21,22,24,25,27],
+                [21,23,25,28,32,29,32,35,39,44,16,17,18,19,20,26,27,29,30,32]
+            ],
+            [ // ageIdx 5: 65-69
+                [11,12,13,15,17,14,16,18,20,23,9,10,10,11,12,14,15,16,17,18],
+                [13,15,16,18,20,18,20,22,25,27,11,12,13,13,14,17,18,19,20,21],
+                [16,18,20,22,25,22,24,27,30,33,14,14,15,16,17,20,21,22,24,25],
+                [20,22,25,27,30,27,30,33,36,40,16,17,18,19,20,24,25,27,28,29],
+                [25,27,30,33,36,33,36,39,43,47,20,21,22,23,24,29,30,31,33,34]
+            ],
+            [ // ageIdx 6: 70-74
+                [14,15,17,19,21,18,19,22,24,26,12,13,13,14,15,17,18,19,19,20],
+                [17,19,20,23,25,21,23,26,28,31,15,15,16,16,17,20,21,22,23,24],
+                [20,22,25,27,30,26,28,31,34,37,17,18,19,19,20,24,24,25,26,28],
+                [25,27,29,32,35,31,34,37,40,43,20,21,22,23,24,27,28,30,31,32],
+                [30,32,35,38,42,37,40,43,47,51,24,25,25,26,28,32,33,34,36,37]
+            ]
+        ];
 
         function autoCalculateDyslipidemiaStatus() {
             var row = document.getElementById('row-dyslipidemia-status');
@@ -3382,32 +3415,50 @@
         }
 
         function getAgeGroup(age) {
-            if (age < 40) return null;
-            if (age <= 49) return 40;
-            if (age <= 59) return 50;
-            if (age <= 69) return 60;
-            return 70;
+            if (age < 40 || age > 74) return null;
+            if (age <= 44) return 0;
+            if (age <= 49) return 1;
+            if (age <= 54) return 2;
+            if (age <= 59) return 3;
+            if (age <= 64) return 4;
+            if (age <= 69) return 5;
+            return 6;
         }
 
         function getSBPCategory(sbp) {
-            if (sbp < 120) return 120;
-            if (sbp <= 129) return 120;
-            if (sbp <= 149) return 140;
-            if (sbp <= 169) return 160;
-            return 180;
+            if (sbp < 120) return 0;
+            if (sbp <= 139) return 1;
+            if (sbp <= 159) return 2;
+            if (sbp <= 179) return 3;
+            return 4;
         }
 
-        function getCholCode(tc) {
-            if (!tc || tc === 0) return 0;
-            if (tc < 155) return 4;
-            if (tc < 190) return 5;
-            if (tc < 228) return 6;
-            if (tc < 267) return 7;
-            return 8;
+        function getBMICategory(bmi) {
+            if (bmi < 20) return 0;
+            if (bmi < 25) return 1;
+            if (bmi < 30) return 2;
+            if (bmi < 35) return 3;
+            return 4;
+        }
+
+        function getTCCategory(tc) {
+            if (tc < 4.0) return 0;
+            if (tc < 5.2) return 1;
+            if (tc < 6.2) return 2;
+            if (tc < 7.3) return 3;
+            return 4;
+        }
+
+        function cvdRiskPercentToLevel(pct) {
+            if (pct < 5) return 0;
+            if (pct < 10) return 1;
+            if (pct < 20) return 2;
+            if (pct < 30) return 3;
+            return 4;
         }
 
         function getCVDRiskLabel(level) {
-            var labels = ["<10%", "10% to <20%", "20% to <30%", "30% to <40%", ">=40%"];
+            var labels = ["<5%", "5% to <10%", "10% to <20%", "20% to <30%", ">=30%"];
             return labels[level] || "";
         }
 
@@ -3419,7 +3470,7 @@
         function calculateCVDRisk() {
             var age = patientDemographics.age;
             var sex = patientDemographics.gender;
-            var ageGroup = getAgeGroup(age);
+            var ageIdx = getAgeGroup(age);
             var row = document.getElementById('row-cvd-risk');
             var valueSpan = document.getElementById('cvd-risk-value');
             var badgeSpan = document.getElementById('cvd-risk-badge');
@@ -3437,10 +3488,10 @@
                 return;
             }
 
-            // Check for required inputs
-            if (!ageGroup || (sex !== 'M' && sex !== 'F')) {
+            // Check age range
+            if (ageIdx === null || (sex !== 'M' && sex !== 'F')) {
                 row.style.display = 'table-row';
-                valueSpan.textContent = 'Need age 40-79 and sex';
+                valueSpan.textContent = 'Need age 40-74 and sex';
                 badgeSpan.textContent = '';
                 badgeSpan.className = 'risk-badge';
                 return;
@@ -3462,38 +3513,7 @@
                 badgeSpan.className = 'risk-badge';
                 return;
             }
-            var sbpCat = getSBPCategory(sbp);
-
-            // Determine lab vs non-lab mode
-            var tcStr = document.getElementById('obs-total-cholesterol').value.trim();
-            var tc = parseFloat(tcStr);
-            var cholCode = (!isNaN(tc) && tc > 0) ? getCholCode(tc) : 0;
-            var isLab = cholCode > 0;
-
-            // Non-lab mode uses BMI
-            if (!isLab) {
-                var wStr = document.getElementById('obs-weight').value.trim();
-                var hStr = document.getElementById('obs-height').value.trim();
-                var w = parseFloat(wStr), h_cm = parseFloat(hStr);
-                if (isNaN(w) || isNaN(h_cm) || h_cm <= 0 || w <= 0) {
-                    row.style.display = 'table-row';
-                    valueSpan.textContent = 'Enter weight & height for BMI (non-lab)';
-                    badgeSpan.textContent = '';
-                    badgeSpan.className = 'risk-badge';
-                    return;
-                }
-                var h_m = h_cm / 100;
-                var bmi = w / (h_m * h_m);
-                // For non-lab mode with WHO/ISH, BMI categories map to chol codes:
-                // BMI < 20 -> 4, 20-24 -> 5, 25-29 -> 6, 30-34 -> 7, >=35 -> 8
-                // But the non-lab model uses chol=0 (TC unknown), so we keep cholCode=0
-                // and use the non-lab lookup (chl=0 entry in the table)
-                // No need to do anything special - cholCode is already 0
-            }
-
-            // Diabetes status
-            var dmType = document.getElementById('search-dm').value.trim();
-            var hasDM = dmType === 'Type 2 Diabetes Mellitus' ? 1 : 0;
+            var sbpIdx = getSBPCategory(sbp);
 
             // Smoking status from pill-box-risks
             var riskPills = document.querySelectorAll('#pill-box-risks .pill');
@@ -3502,15 +3522,63 @@
                 return v.toLowerCase().indexOf('tobacco') !== -1 || v.toLowerCase().indexOf('smok') !== -1;
             }) ? 1 : 0;
 
-            var gdr = sex === 'M' ? 1 : 0;
+            var sexIdx = sex === 'M' ? 0 : 1;
 
-            var cholIndex = [0, 0, 0, 0, 1, 2, 3, 4, 5][cholCode]; // map 0→0,4→1,5→2,6→3,7→4,8→5
+            // Determine lab vs non-lab mode
+            var tcStr = document.getElementById('obs-total-cholesterol').value.trim();
+            var tc = parseFloat(tcStr);
+            var isLab = !isNaN(tc) && tc > 0;
 
-            var table = WHO_AFRE;
-            var level;
-            try {
-                level = table[hasDM][gdr][smoker][ageGroup][sbpCat][cholIndex];
-            } catch(e) {
+            var risk;
+            if (!isLab) {
+                // Non-lab mode: BMI-based (no diabetes needed)
+                var wStr = document.getElementById('obs-weight').value.trim();
+                var hStr = document.getElementById('obs-height').value.trim();
+                var w = parseFloat(wStr), h_cm = parseFloat(hStr);
+                if (isNaN(w) || isNaN(h_cm) || h_cm <= 0 || w <= 0) {
+                    row.style.display = 'table-row';
+                    valueSpan.textContent = 'Enter weight & height for BMI';
+                    badgeSpan.textContent = '';
+                    badgeSpan.className = 'risk-badge';
+                    return;
+                }
+                var bmi = w / ((h_cm / 100) * (h_cm / 100));
+                var bmiIdx = getBMICategory(bmi);
+
+                var nonlabAgeGroup = WHO_2019_NONLAB_AFRE[ageIdx];
+                if (!nonlabAgeGroup) {
+                    row.style.display = 'table-row';
+                    valueSpan.textContent = 'Data not available';
+                    badgeSpan.textContent = '';
+                    badgeSpan.className = 'risk-badge';
+                    return;
+                }
+                var sbpRow = nonlabAgeGroup[sbpIdx];
+                var arrIdx = sexIdx * 10 + smoker * 5 + bmiIdx;
+                risk = sbpRow[arrIdx];
+            } else {
+                // Lab mode: total cholesterol (mmol/L) + diabetes status
+                var tcIdx = getTCCategory(tc);
+
+                // Diabetes status
+                var dmType = document.getElementById('search-dm').value.trim();
+                var hasDM = dmType === 'Type 2 Diabetes Mellitus';
+
+                var labTable = hasDM ? WHO_2019_LAB_DM_AFRE : WHO_2019_LAB_NONDM_AFRE;
+                var labAgeGroup = labTable[ageIdx];
+                if (!labAgeGroup) {
+                    row.style.display = 'table-row';
+                    valueSpan.textContent = 'Lab data not available for this age group (need age 60-74 for lab model)';
+                    badgeSpan.textContent = '';
+                    badgeSpan.className = 'risk-badge';
+                    return;
+                }
+                var sbpRow = labAgeGroup[sbpIdx];
+                var arrIdx = sexIdx * 10 + smoker * 5 + tcIdx;
+                risk = sbpRow[arrIdx];
+            }
+
+            if (risk === undefined || risk === null) {
                 row.style.display = 'table-row';
                 valueSpan.textContent = 'Data not available';
                 badgeSpan.textContent = '';
@@ -3518,20 +3586,12 @@
                 return;
             }
 
-            if (level === undefined) {
-                row.style.display = 'table-row';
-                valueSpan.textContent = 'Data not available';
-                badgeSpan.textContent = '';
-                badgeSpan.className = 'risk-badge';
-                return;
-            }
-
+            var level = cvdRiskPercentToLevel(risk);
             var label = getCVDRiskLabel(level);
             var badgeClass = getCVDBadgeClass(level);
-            var mode = isLab ? 'lab' : 'non-lab';
 
             row.style.display = 'table-row';
-            valueSpan.textContent = label;
+            valueSpan.textContent = risk + '% (' + label + ')';
             badgeSpan.textContent = label;
             badgeSpan.className = 'risk-badge ' + badgeClass;
             autoCalculateDyslipidemiaStatus();

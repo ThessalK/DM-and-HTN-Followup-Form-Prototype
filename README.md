@@ -30,7 +30,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 8. [Ethiopian Date Picker](#ethiopian-date-picker)
 9. [Pediatric BP Classification (AAP 2017)](#pediatric-bp-classification-aap-2017)
 10. [Hypotensive Detection](#hypotensive-detection)
-11. [CVD Risk (WHO/ISH 2014)](#cvd-risk-whoish-2014)
+11. [CVD Risk (WHO 2019 revised)](#cvd-risk-who-2019-revised)
 12. [Mobile Responsiveness](#mobile-responsiveness)
 13. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
 11. [Developer Notes](#developer-notes)
@@ -444,9 +444,9 @@ In `calculateHTNGrade()`, hypotensive is shown as a distinct label in the `obs-h
 
 ---
 
-## CVD Risk (WHO/ISH 2014)
+## CVD Risk (WHO 2019 revised)
 
-The form computes a 10-year cardiovascular disease risk estimate using the **WHO/ISH 2014 risk prediction charts** for the **AFR-E subregion** (Eastern Sub-Saharan Africa). This is a lookup-table-based service (not a formula), using the original CSV data from the `whoishRisk` R package.
+The form computes a 10-year cardiovascular disease risk estimate using the **2019 revised WHO cardiovascular disease risk charts** for **Eastern Sub-Saharan Africa**. This uses a lookup-table-based approach for both Laboratory and Non-Laboratory models. (Note: The laboratory models for ages 40-59 are currently pending data entry and will show as "Lab data not available".)
 
 ### Display
 
@@ -454,11 +454,11 @@ A **CVD Risk** row (`row-cvd-risk`) appears below the LDL entry in the *Pertinen
 
 | Risk Level | Badge Color |
 |---|---|
-| <10% | Green (`#4CAF50`) |
-| 10% to <20% | Yellow (`#FFC107`) |
-| 20% to <30% | Orange (`#FF9800`) |
-| 30% to <40% | Red (`#F44336`) |
-| ≥40% | Dark Red (`#B71C1C`) |
+| <5% | Green (`#4CAF50`) |
+| 5% to <10% | Yellow (`#FFC107`) |
+| 10% to <20% | Orange (`#FF9800`) |
+| 20% to <30% | Red (`#F44336`) |
+| ≥30% | Dark Red (`#B71C1C`) |
 
 ### Visibility
 
@@ -483,13 +483,15 @@ The calculator supports two modes:
 | Diabetes | `search-dm` = "Type 2 Diabetes Mellitus" | dm=1 if exact match, else dm=0 |
 | Smoking | `#pill-box-risks` pills | Smoker if any pill text contains "tobacco" or "smok" (case-insensitive) |
 
-### Lookup Table
+### Lookup Tables
 
-The `WHO_AFRE` JavaScript object is a 5-level nested structure indexed by:
-- **dm** (0/1) → **gender** (0=F/1=M) → **smoker** (0/1) → **age group** (40/50/60/70) → **SBP category** (120/140/160/180) → **chol code** (0/4/5/6/7/8)
+The form utilizes three JavaScript arrays acting as lookup tables:
+- `WHO_2019_NONLAB_AFRE`: Non-laboratory model (uses BMI)
+- `WHO_2019_LAB_NONDM_AFRE`: Laboratory model for people without diabetes
+- `WHO_2019_LAB_DM_AFRE`: Laboratory model for people with diabetes
 
-Each cell contains a risk level (0–4) corresponding to the five band labels above.
-
+The structures are nested by **Age Group** → **SBP Category** → **Sex/Smoking/TC or BMI Index**.
+Each derived cell contains an exact risk percentage which maps to a risk level (0–4) corresponding to the five band labels above.
 **Cholesterol code mapping:**
 | Code | TC Range (mg/dL) |
 |---|---|
