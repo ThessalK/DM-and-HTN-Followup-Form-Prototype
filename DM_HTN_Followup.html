@@ -3442,10 +3442,13 @@
         }
 
         function getTCCategory(tc) {
-            if (tc < 4.0) return 0;
-            if (tc < 5.2) return 1;
-            if (tc < 6.2) return 2;
-            if (tc < 7.3) return 3;
+            // tc comes in as mg/dL, WHO categories are in mmol/L
+            // Conversion: 1 mmol/L = 38.67 mg/dL
+            var tcMmol = tc / 38.67;
+            if (tcMmol < 4.0) return 0;
+            if (tcMmol < 5.2) return 1;
+            if (tcMmol < 6.2) return 2;
+            if (tcMmol < 7.3) return 3;
             return 4;
         }
 
@@ -3568,7 +3571,7 @@
                 var labAgeGroup = labTable[ageIdx];
                 if (!labAgeGroup) {
                     row.style.display = 'table-row';
-                    valueSpan.textContent = 'Lab data not available for this age group (need age 60-74 for lab model)';
+                    valueSpan.textContent = 'Lab data pending for age 40-59 (Array null)';
                     badgeSpan.textContent = '';
                     badgeSpan.className = 'risk-badge';
                     return;
