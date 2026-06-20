@@ -446,7 +446,7 @@ In `calculateHTNGrade()`, hypotensive is shown as a distinct label in the `obs-h
 
 ## CVD Risk (WHO 2019 revised)
 
-The form computes a 10-year cardiovascular disease risk estimate using the **2019 revised WHO cardiovascular disease risk charts** for **Eastern Sub-Saharan Africa**. This uses a lookup-table-based approach for both Laboratory and Non-Laboratory models. (Note: The laboratory models for ages 40-59 are currently pending data entry and will show as "Lab data not available".)
+The form computes a 10-year cardiovascular disease risk estimate using the **2019 revised WHO cardiovascular disease risk charts** for **Eastern Sub-Saharan Africa**. This uses a lookup-table-based approach for both Laboratory and Non-Laboratory models. 
 
 ### Display
 
@@ -477,7 +477,7 @@ The calculator supports two modes:
 
 | Input | Source | Notes |
 |---|---|---|
-| Age | `patientDemographics.age` | Must be 40–79 (lookup table range). Use Test Demographics section |
+| Age | `patientDemographics.age` | Must be 40–74 (lookup table range). Use Test Demographics section |
 | Sex | `patientDemographics.gender` | M = Male, F = Female. Use sex toggle |
 | SBP | `obs-sbp` | Categorical: <120, 120–129, 130–149, 150–169, ≥170 |
 | Diabetes | `search-dm` = "Type 2 Diabetes Mellitus" | dm=1 if exact match, else dm=0 |
