@@ -48,6 +48,7 @@ A standalone, mobile-responsive clinical follow-up form for **Diabetes Mellitus 
 14. [Mobile Responsiveness](#mobile-responsiveness)
 15. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
 16. [Developer Notes](#developer-notes)
+17. [References](#references)
 
 ---
 
@@ -849,9 +850,26 @@ Do not use the standard Bahmni Form Builder for the complex calculation blocks. 
 - **Adult (≥13 yr)**: Normal < 140/90, Grade-1 ≥ 140/90, Grade-2 ≥ 160/100, Grade-3 ≥ 180/110, Hypotensive < 90/60.
 - **Pediatric (<13 yr)**: Uses 2017 AAP percentile-based classification with CDC height-for-age z-score. Categories: Normal (both < 90th %ile), Elevated (≥ 90th but < 95th %ile, or ≥ 120/80), Stage 1 HTN (≥ 95th %ile but < 95th+12, or 130/80–139/89), Stage 2 HTN (≥ 95th+12, or ≥ 140/90), Hypotensive (< estimated 5th %ile or age-based absolute minimum). Controlled = Normal/Elevated, Uncontrolled = Hypotensive/Stage 1/Stage 2.
 - **WAIST risk thresholds** (WHO): Male ≤ 94 cm normal, 94–102 increased, > 102 greatly increased. Female ≤ 80 cm normal, 80–88 increased, > 88 greatly increased.
+- **BMI WHO Grading**: 8-class WHO classification: Severe Thinness (< 16.0), Moderate Thinness (16.0–16.9), Mild Thinness (17.0–18.4), Normal (18.5–24.9), Pre-Obesity/Overweight (25.0–29.9), Obesity Class I (30.0–34.9), Obesity Class II (35.0–39.9), Obesity Class III / Morbid (≥ 40.0).
 - **eGFR equation switching**: `autoCalculateGFR()` uses `updateGFRLabels()` to dynamically swap labels and equation (see [Estimated GFR](#estimated-gfr)). **Age ≤ 25:** CKiD U25 equation (`eGFR = k × height/cr`) with age/sex-specific k values; height is required. **Age > 25:** 2021 CKD-EPI equation (`142 × (Scr/A)^B × 0.9938^age × gender`); height not needed.
 - **CVD Risk age gate**: `calculateCVDRisk()` hides the CVD Risk row entirely when age is outside 40–74 (calls `autoCalculateDyslipidemiaStatus()` as fallback). The WHO 2019 lookup tables only support ages 40–74.
 - **Dynamic disease outcome rows**: `syncDiseaseOutcomeRows()` creates one status row per complication/comorbidity pill, each with its own select (Same/Corrected/Controlled/Uncontrolled/Unknown). Rows are removed when the corresponding pill is removed. Uses `<tbody id="disease-outcome-entries">` container.
+
+---
+
+## References
+
+1. **Federal Ministry of Health, Ethiopia.** *National Training on Screening and Comprehensive Management of Hypertension and Diabetes Mellitus at Primary Health Care Level.* Addis Ababa, Ethiopia; 2022.
+
+2. **World Health Organization.** *HEARTS Technical Package for Cardiovascular Disease Management in Primary Health Care: Risk-Based CVD Management.* WHO, Geneva; 2019.
+
+3. **World Health Organization.** *WHO Cardiovascular Disease Risk Charts: Revised Models to Estimate Risk in 21 Global Regions.* Lancet Glob Health 2019; 7(10): e1332–e1345.
+
+4. **Pierce CB, et al.** *A New eGFR Equation for Children and Young Adults (CKiD U25).* Am J Kidney Dis 2021; 78(1): 99–109.
+
+5. **Inker LA, et al. (NKF/ASN Task Force).** *New Creatinine- and Cystatin C–Based Equations to Estimate GFR without Race.* N Engl J Med 2021; 385: 1737–1749.
+
+6. **Flynn JT, et al. (AAP).** *Clinical Practice Guideline for Screening and Management of High Blood Pressure in Children and Adolescents.* Pediatrics 2017; 140(3): e20171904.
 
 ---
 
