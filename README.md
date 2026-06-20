@@ -21,7 +21,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
     - [Auto-Calculations](#auto-calculations)
     - [Validation Constraints](#validation-constraints)
     - [Conditional Visibility](#conditional-visibility)
-   - [Risk-Linked Lifestyle Buttons](#risk-linked-lifestyle-buttons)
+    - [Risk-Linked Lifestyle Buttons](#risk-linked-lifestyle-buttons)
    - [MMAS-4 Adherence Modal](#mmas-4-adherence-modal)
 4. [Save / Snapshot System](#save--snapshot-system)
 5. [Copy Last Observation](#copy-last-observation)
@@ -33,7 +33,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 11. [CVD Risk (WHO 2019 revised)](#cvd-risk-who-2019-revised)
 12. [Mobile Responsiveness](#mobile-responsiveness)
 13. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
-11. [Developer Notes](#developer-notes)
+14. [Developer Notes](#developer-notes)
 
 ---
 
@@ -42,7 +42,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 | Aspect | Detail |
 |---|---|
 | **Stack** | HTML5 + CSS3 + Vanilla ES6 JavaScript (no frameworks, no build tools) |
-| **File** | Single file: `DM_HTN_Followup.html` (~3575 lines) |
+| **File** | Single file: `DM_HTN_Followup.html` (~3948 lines) |
 | **State** | Client-side only (no persistence layer; save creates in-memory DOM snapshot columns) |
 | **Calendar** | Ethiopian calendar (E.C.) with Gregorian conversion for the appointment picker |
 | **Mock Data** | Hardcoded `dictConcepts` array simulates OpenMRS concept search |
@@ -99,7 +99,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 |---|---|---|
 | `obs-symptoms` | Textarea | Recent Complaint |
 | `search-risks` | Autocomplete + pills | Multi-select risk factors from `dictConcepts.risks`. Pills in `#pill-box-risks`. Drives lifestyle button visibility |
-| Pregnancy buttons | Button group | Shown only for females aged 15–45 (`row-pregnant`). Selecting "No" reveals conceive planning row (`row-conceive`) |
+| `obs-pregnant` | Hidden `<input type="hidden">` + Button group | Shown only for females aged 15–45 (`row-pregnant`). Selecting "No" reveals conceive planning row (`row-conceive`). Value synced to hidden field for OpenMRS concept mapping |
 
 ### Objective Section
 
@@ -142,7 +142,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 | `obs-total-cholesterol` | Integer input | CVD Risk (lab mode) |
 | `obs-triglyceride` | Integer input | — |
 | `obs-ldl` | Integer input | — |
-| `obs-cvd-risk` | Read-only badge (hidden row) | WHO/ISH 2014 CVD Risk (AFR-E) — shown when dyslipidemia-copy has value |
+| `obs-cvd-risk` | Read-only badge (hidden row) | WHO 2019 revised CVD Risk (AFR-E) — shown when dyslipidemia-copy has value |
 | `obs-ecg` | Textarea | — |
 | `obs-echo` | Textarea | — |
 | `obs-fundoscopic` | Textarea | — |
@@ -192,20 +192,20 @@ This section contains the **current encounter treatment plan**. It is always vis
 | Field ID | Type | Behavior |
 |---|---|---|---|
 | `obs-appointment` | Read-only (Ethiopian calendar) | Displays selected date in E.C. format |
-| `obs-appointment-gregorian` | Hidden | Stores Gregorian equivalent for Bahmni |
+| `obs-appointment-gregorian` | Hidden | Gregorian backing-store for Bahmni's existing appointment scheduling concept; maps directly to the OpenMRS appointment date-time obs |
 | Picker | Custom calendar widget | Restricts to today + future dates only. Saturdays, Sundays, and Ethiopian full holidays are disabled |
 
-**Bahmni Integration — Appointment Scheduling Workflow**
+**Bahmni Integration — Appointment Scheduling Concept Mapping**
 
-In production deployment, the `obs-appointment` field must be wired to the **Bahmni Appointment Scheduling module**:
+This form integrates with Bahmni's pre-existing Appointment Scheduling module, which provides a dedicated concept and API for follow-up visit tracking out of the box. The `obs-appointment-gregorian` hidden field is the integration point: it stores the ISO-formatted Gregorian date that maps directly to the standard OpenMRS appointment obs concept, enabling seamless interoperability with Bahmni's scheduling infrastructure without custom extension.
 
-| Capability | Implementation |
+| Capability | Bahmni Native Integration |
 |---|---|
-| **Follow-up visit creation** | On form save, submit `obs-appointment-gregorian` to the OpenMRS appointment API to create or update a scheduled appointment for the patient |
-| **Automated reminders** | Leverage Bahmni's SMS/notification service triggered by the appointment date |
-| **Bi-directional sync** | Pre-populate `obs-appointment` from the patient's existing scheduled appointment (if any) on form load; update on save |
-| **Conflict detection** | Cross-reference with the provider's existing appointments for the selected date/time before committing |
-| **Calendar integration** | Replace the prototype's standalone Ethiopian picker with Bahmni's native `datepicker` directive (which already supports the Ethiopian calendar and appointment context) |
+| **Follow-up visit creation** | On form save, submit `obs-appointment-gregorian` to the OpenMRS appointment API to create or update a scheduled appointment for the patient. The field already aligns with Bahmni's existing `Visit Appointment` concept for out-of-the-box mapping |
+| **Automated reminders** | Bahmni's built-in SMS/notification service triggers automatically from the scheduled appointment date — no additional wiring required |
+| **Bi-directional sync** | On form load, pre-populate `obs-appointment` from the patient's existing scheduled appointment (if any) via Bahmni's appointment REST endpoint; update on save keeps both sides in sync |
+| **Conflict detection** | Bahmni's scheduling engine inherently cross-references provider availability and existing appointments before committing |
+| **Calendar integration** | In production, replace the prototype's standalone Ethiopian picker with Bahmni's native `datepicker` directive, which already supports the Ethiopian calendar and the appointment scheduling context natively |
 
 ---
 
@@ -225,7 +225,7 @@ In production deployment, the `obs-appointment` field must be wired to the **Bah
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
 | `autoCalculateGFR()` | Creatinine input | `obs-gfr` (2021 CKD-EPI) + `obs-gfr-kdigo` (G1–G5) |
 | `calculateOverallAdherence()` | MMAS-4 modal save | `obs-overall-adherence`: Good / Poor |
-| `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, demographics | `row-cvd-risk` badge: <10% (green) / 10–20% (yellow) / 20–30% (orange) / 30–40% (red) / ≥40% (dark red) |
+| `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, demographics | `row-cvd-risk` badge: <5% (green) / 5% to <10% (yellow) / 10% to <20% (orange) / 20% to <30% (red) / ≥30% (dark red) |
 | `autoCalculateDyslipidemiaStatus()` | dyslipidemia-copy, LDL | `obs-dyslipidemia-status`: Controlled (LDL<70) / Uncontrolled (LDL≥70) / Unknown (no LDL) |
 
 ### Validation Constraints
@@ -266,7 +266,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-complic-status` | Any complication pills exist in `#pill-box-complic` |
 | `row-comorb-status` | Any comorbidity pills exist in `#pill-box-comorb` |
 | `row-dyslipidemia-status` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry). Auto-hides when cleared |
-| `row-pregnant` | Gender = F and age 15–45 |
+| `row-pregnant` | Gender = F and age 15–45 (re-evaluated dynamically when age or sex changes via `syncDemographics()` / `setDemoSex()`) |
 | `row-conceive` | Pregnant answer = "No" |
 | `row-overall-adherence` | Any pharmacologic field has content |
 | `row-linked-to`, `row-linkage-note` | `obs-linked-to` has content |
@@ -523,6 +523,8 @@ Each derived cell contains an exact risk percentage which maps to a risk level (
 - `pill-box-risks` pill add/remove (smoking status)
 - `obs-dyslipidemia-copy` (visibility gate — show CVD Risk when empty, show Dyslipidemia Status when filled)
 - Demographics age/sex change
+- `obs-ldl` (triggers both `autoCalculateDyslipidemiaStatus()` and `calculateCVDRisk()`)
+- `obs-dyslipidemia` (clearing dyslipidemia re-shows CVD Risk row)
 
 Additionally, `autoCalculateDyslipidemiaStatus()` runs directly on `obs-ldl` changes to update the Dyslipidemia Disease Outcome status in real time.
 
