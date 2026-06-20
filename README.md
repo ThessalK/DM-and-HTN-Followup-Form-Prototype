@@ -859,7 +859,7 @@ Do not use the standard Bahmni Form Builder for the complex calculation blocks. 
 
 ## References
 
-1. **Federal Ministry of Health, Ethiopia.** *National Training on Screening and Comprehensive Management of Hypertension and Diabetes Mellitus at Primary Health Care Level.* Addis Ababa, Ethiopia; 2022.
+1. **Federal Ministry of Health, Ethiopia.** *National Training on Screening and Comprehensive Management of Hypertension and Diabetes Mellitus at Primary Health Care Level.* Addis Ababa, Ethiopia; 2023.
 
 2. **World Health Organization.** *HEARTS Technical Package for Cardiovascular Disease Management in Primary Health Care: Risk-Based CVD Management.* WHO, Geneva; 2019.
 
