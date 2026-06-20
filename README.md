@@ -168,8 +168,8 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 
 | Field ID | Type | Visibility |
 |---|---|---|---|
-| `dm-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when FBS/RBS/HgA1c has data |
-| `htn-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when SBP/DBP has data |
+| `dm-status` | Select (Controlled/Uncontrolled) | Hidden row, shown only when **Type of DM** (`search-dm`) has a diagnosis AND FBS/RBS/HgA1c has data |
+| `htn-status` | Select (Controlled/Uncontrolled) | Hidden row, shown only when **Type of HTN** (`search-htn`) has a diagnosis AND SBP/DBP has data |
 | `obs-dyslipidemia-status` | Select (Controlled/Uncontrolled/Unknown) | Auto-computed from LDL when dyslipidemia-copy has entry. Hidden row, shown when dyslipidemia-copy has data |
 | `outcome-status-complic-*` (dynamic) | Select per complication (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-complic`, created/removed dynamically by `syncDiseaseOutcomeRows()` |
 | `outcome-status-comorb-*` (dynamic) | Select per comorbidity (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-comorb`, created/removed dynamically by `syncDiseaseOutcomeRows()` |
@@ -222,11 +222,11 @@ This section contains the **current encounter treatment plan**. It is always vis
 | Function | Trigger | Output(s) |
 |---|---|---|
 | `calculateHTNGrade()` | SBP or DBP or Height input | `obs-htn-grade`: **Adult (≥13):** Normal / Grade-1 / Grade-2 / Grade-3 / Hypotensive. **Pediatric (<13):** Pediatric: Normal / Elevated / Stage 1 HTN / Stage 2 HTN / Hypotensive (with height-adjusted percentile thresholds) |
-| `autoCalculateHTNStatus()` | SBP or DBP input | `htn-status`: Controlled / Uncontrolled (pediatric: Normal+Elevated → Controlled, Hypotensive+Stage1+Stage2 → Uncontrolled) |
+| `autoCalculateHTNStatus()` | SBP, DBP input, or search-htn change | `htn-status`: Controlled / Uncontrolled (pediatric: Normal+Elevated → Controlled, Hypotensive+Stage1+Stage2 → Uncontrolled). Row hidden until Type of HTN diagnosed |
 | `calculateHeightZScore()` | Height, age, sex | Height-for-age z-score using CDC LMS reference data |
 | `calculatePediatricBPThresholds()` | Age, sex, height | 90th and 95th percentile SBP/DBP thresholds interpolated from AAP 2017 normative tables |
 | `classifyPediatricBP()` | SBP, DBP, thresholds | Pediatric BP category: Normal / Elevated / Stage 1 HTN / Stage 2 HTN / Hypotensive |
-| `autoCalculateDMStatus()` | FBS, RBS, or HgA1c input | `dm-status`: Controlled or Uncontrolled |
+| `autoCalculateDMStatus()` | FBS, RBS, HgA1c input, or search-dm change | `dm-status`: Controlled or Uncontrolled. Row hidden until Type of DM diagnosed |
 | `autoCalculateBMI()` | Weight or Height input | `obs-bmi` + `obs-bmi-grading` (WHO 7-class) |
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
 | `autoCalculateGFR()` | Creatinine or Height or demographics change | `obs-gfr` (CKiD U25 ≤25 yr / 2021 CKD-EPI >25 yr) + G-stage (G1–G5) via `updateGFRLabels()` |
@@ -269,8 +269,8 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-urine-ketone` | FBS ≥ 250 or RBS ≥ 350 |
 | `row-urine-protein` | Albumin = 2+, 3+, or 4+ |
 | `row-gfr`, `row-gfr-kdigo` | Creatinine has a value. For ≤25 yr (CKiD U25), height is also required; otherwise shows prompt |
-| `row-dm-status` | FBS, RBS, or HgA1c has a value |
-| `row-htn-status` | SBP or DBP has a value |
+| `row-dm-status` | Type of DM (`search-dm`) has a diagnosis **and** FBS/RBS/HgA1c has a value |
+| `row-htn-status` | Type of HTN (`search-htn`) has a diagnosis **and** SBP/DBP has a value |
 | `#disease-outcome-entries tr` | Created dynamically for each pill in `#pill-box-complic` and `#pill-box-comorb` |
 | `row-dyslipidemia-status` | `obs-dyslipidemia-copy` has a value (treatment section dyslipidemia entry). Auto-hides when cleared |
 | `row-pregnant` | Gender = F and age 15–45 |
@@ -854,6 +854,7 @@ Do not use the standard Bahmni Form Builder for the complex calculation blocks. 
 - **eGFR equation switching**: `autoCalculateGFR()` uses `updateGFRLabels()` to dynamically swap labels and equation (see [Estimated GFR](#estimated-gfr)). **Age ≤ 25:** CKiD U25 equation (`eGFR = k × height/cr`) with age/sex-specific k values; height is required. **Age > 25:** 2021 CKD-EPI equation (`142 × (Scr/A)^B × 0.9938^age × gender`); height not needed.
 - **CVD Risk age gate**: `calculateCVDRisk()` hides the CVD Risk row entirely when age is outside 40–74 (calls `autoCalculateDyslipidemiaStatus()` as fallback). The WHO 2019 lookup tables only support ages 40–74.
 - **Dynamic disease outcome rows**: `syncDiseaseOutcomeRows()` creates one status row per complication/comorbidity pill, each with its own select (Same/Corrected/Controlled/Uncontrolled/Unknown). Rows are removed when the corresponding pill is removed. Uses `<tbody id="disease-outcome-entries">` container.
+- **DM/HTN status diagnosis gating**: `autoCalculateDMStatus()` and `autoCalculateHTNStatus()` only show their respective outcome rows when the corresponding diagnosis has been entered in the Diagnosis Categories section (`search-dm` for DM, `search-htn` for HTN). This prevents disease outcome rows from appearing before a formal diagnosis is documented.
 
 ---
 

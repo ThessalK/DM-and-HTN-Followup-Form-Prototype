@@ -1065,7 +1065,8 @@
                             <div class="autocomplete-wrapper" style="max-width: 100%;">
                                 <input type="text" id="search-dm" placeholder="Search and select Type of DM..."
                                     oninput="handleSearch(this, 'dm'); updateLifestyleButtons(); calculateCVDRisk()"
-                                    onfocus="handleSearch(this, 'dm')">
+                                    onfocus="handleSearch(this, 'dm')"
+                                    onblur="setTimeout(function(){ autoCalculateDMStatus(); }, 150)">
                                 <div class="autocomplete-dropdown" id="dropdown-dm"></div>
                             </div>
                         </td>
@@ -1075,7 +1076,8 @@
                         <td class="input-cell" style="overflow: visible;">
                             <div class="autocomplete-wrapper" style="max-width: 100%;">
                                 <input type="text" id="search-htn" placeholder="Search and select Type of HTN..."
-                                    oninput="handleSearch(this, 'htn')" onfocus="handleSearch(this, 'htn')">
+                                    oninput="handleSearch(this, 'htn')" onfocus="handleSearch(this, 'htn')"
+                                    onblur="setTimeout(function(){ autoCalculateHTNStatus(); }, 150)">
                                 <div class="autocomplete-dropdown" id="dropdown-htn"></div>
                             </div>
                         </td>
@@ -1959,7 +1961,8 @@
                         } else {
                             // Single-select directly populates input field
                             inputElem.value = opt;
-                            if (type === 'dm') { updateLifestyleButtons(); calculateCVDRisk(); }
+                            if (type === 'dm') { updateLifestyleButtons(); calculateCVDRisk(); autoCalculateDMStatus(); }
+                        if (type === 'htn') { autoCalculateHTNStatus(); }
                         }
                         dropdown.classList.remove('active');
                     };
@@ -3547,10 +3550,17 @@
             const dbpStr = document.getElementById('obs-dbp').value.trim();
             const select = document.getElementById('htn-status');
             const row = document.getElementById('row-htn-status');
+            const htnDiagnosis = document.getElementById('search-htn');
 
             if (!select || !row) return;
 
             select.value = '';
+
+            // HTN status row only shown when Type of HTN has been diagnosed in the Diagnosis Categories section
+            if (!htnDiagnosis || !htnDiagnosis.value.trim()) {
+                row.style.display = 'none';
+                return;
+            }
 
             if (sbpStr && dbpStr) {
                 row.style.display = 'table-row';
@@ -3609,8 +3619,16 @@
             const rbsStr = document.getElementById('obs-rbs').value.trim();
             const select = document.getElementById('dm-status');
             const row = document.getElementById('row-dm-status');
+            const dmDiagnosis = document.getElementById('search-dm');
 
             if (!select || !row) return;
+            select.value = '';
+
+            // DM status row only shown when Type of DM has been diagnosed in the Diagnosis Categories section
+            if (!dmDiagnosis || !dmDiagnosis.value.trim()) {
+                row.style.display = 'none';
+                return;
+            }
 
             let hasData = false;
             let isControlled = false;
