@@ -31,9 +31,11 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 9. [Pediatric BP Classification (AAP 2017)](#pediatric-bp-classification-aap-2017)
 10. [Hypotensive Detection](#hypotensive-detection)
 11. [CVD Risk (WHO 2019 revised)](#cvd-risk-who-2019-revised)
-12. [Mobile Responsiveness](#mobile-responsiveness)
-13. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
-11. [Developer Notes](#developer-notes)
+12. [Estimated GFR — CKiD U25 (Age ≤ 25)](#estimated-gfr--ckid-u25-age--25)
+13. [Dynamic Disease Outcome Rows](#dynamic-disease-outcome-rows)
+14. [Mobile Responsiveness](#mobile-responsiveness)
+15. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
+16. [Developer Notes](#developer-notes)
 
 ---
 
@@ -42,7 +44,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 | Aspect | Detail |
 |---|---|
 | **Stack** | HTML5 + CSS3 + Vanilla ES6 JavaScript (no frameworks, no build tools) |
-| **File** | Single file: `DM_HTN_Followup.html` (~3575 lines) |
+| **File** | Single file: `DM_HTN_Followup.html` (~4130 lines) |
 | **State** | Client-side only (no persistence layer; save creates in-memory DOM snapshot columns) |
 | **Calendar** | Ethiopian calendar (E.C.) with Gregorian conversion for the appointment picker |
 | **Mock Data** | Hardcoded `dictConcepts` array simulates OpenMRS concept search |
@@ -111,7 +113,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 | `obs-dbp` | Integer input (text mode) | HTN Grade + HTN Status + Pediatric BP |
 | `obs-pulse` | Integer input (text mode) | Pulse volume/rhythm row visibility |
 | `obs-weight` | Integer input (text mode) | BMI + WHO Grading |
-| `obs-height` | Integer input (text mode) | BMI + WHO Grading + Pediatric BP (when age < 13) |
+| `obs-height` | Integer input (text mode) | BMI + WHO Grading + Pediatric BP (when age < 13) + CKiD U25 eGFR (when age ≤ 25) |
 | `obs-bmi` | Read-only (hidden row) | `weight(kg) / (height(m))²` |
 | `obs-bmi-grading` | Read-only (hidden row) | WHO classification |
 | `obs-waist` | Integer input (hidden row, age ≥ 20) | Metabolic Risk |
@@ -134,9 +136,9 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 | `obs-albumin` | Select (Nil/ Trace/ 1+– 4+) | 24-hr Urine Protein row shown on 2+/3+/4+ |
 | `obs-micro` | Textarea | Microscopic findings |
 | `obs-urine-prof` | Input (hidden row) | 24-hr Urine Protein |
-| `obs-creatinine` | Decimal input (allowDecimalInput) | GFR + Category (CKiD U25 ≤25 yr / CKD-EPI >25 yr) |
-| `obs-gfr` | Read-only (hidden row) | eGFR: CKiD U25 (≤25 yr) or 2021 CKD-EPI (>25 yr) |
-| `obs-gfr-kdigo` | Read-only (hidden row) | G1–G5 with color coding (label changes with equation) |
+| `obs-creatinine` | Decimal input (allowDecimalInput) | eGFR + Stage (G1–G5). Equation auto-selects: CKiD U25 (≤25 yr) or 2021 CKD-EPI (>25 yr) |
+| `obs-gfr` | Read-only (hidden row) | **Age ≤ 25:** "Estimated GFR by CKiD U25 Creatinine" (requires height). **Age > 25:** "GFR(ml/min/1.73 m2)" via 2021 CKD-EPI |
+| `obs-gfr-kdigo` | Read-only (hidden row) | G1–G5 with color coding. **Age ≤ 25:** "CKiD U25 Category". **Age > 25:** "KDIGO Category" |
 | `obs-na` | Integer input | — |
 | `obs-k` | Integer input | — |
 | `obs-total-cholesterol` | Integer input | CVD Risk (lab mode) |
@@ -156,8 +158,8 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 | `dm-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when FBS/RBS/HgA1c has data |
 | `htn-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when SBP/DBP has data |
 | `obs-dyslipidemia-status` | Select (Controlled/Uncontrolled/Unknown) | Auto-computed from LDL when dyslipidemia-copy has entry. Hidden row, shown when dyslipidemia-copy has data |
-| Dynamic complication rows | Each selected complication gets its own row with status select (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-complic`, added/removed dynamically |
-| Dynamic comorbidity rows | Each selected comorbidity gets its own row with status select (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-comorb`, added/removed dynamically |
+| `outcome-status-complic-*` (dynamic) | Select per complication (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-complic`, created/removed dynamically by `syncDiseaseOutcomeRows()` |
+| `outcome-status-comorb-*` (dynamic) | Select per comorbidity (Same/Corrected/Controlled/Uncontrolled/Unknown) | One row per pill in `#pill-box-comorb`, created/removed dynamically by `syncDiseaseOutcomeRows()` |
 
 ### Treatment (Active Plan)
 
@@ -211,10 +213,12 @@ This section contains the **current encounter treatment plan**. It is always vis
 | `autoCalculateDMStatus()` | FBS, RBS, or HgA1c input | `dm-status`: Controlled or Uncontrolled |
 | `autoCalculateBMI()` | Weight or Height input | `obs-bmi` + `obs-bmi-grading` (WHO 7-class) |
 | `autoCalculateWaistRisk()` | Waist input | `obs-metabolic-risk`: Normal / Increased / Greatly Increased (by gender) |
-| `autoCalculateGFR()` | Creatinine input | `obs-gfr` (CKiD U25 ≤25 yr / 2021 CKD-EPI >25 yr) + G-stage (G1–G5) |
+| `autoCalculateGFR()` | Creatinine or Height or demographics change | `obs-gfr` (CKiD U25 ≤25 yr / 2021 CKD-EPI >25 yr) + G-stage (G1–G5) via `updateGFRLabels()` |
 | `calculateOverallAdherence()` | MMAS-4 modal save | `obs-overall-adherence`: Good / Poor |
 | `calculateCVDRisk()` | SBP, TC, weight, height, DM, smoking, dyslipidemia-copy, demographics | `row-cvd-risk` badge: <10% (green) / 10–20% (yellow) / 20–30% (orange) / 30–40% (red) / ≥40% (dark red) |
 | `autoCalculateDyslipidemiaStatus()` | dyslipidemia-copy, LDL | `obs-dyslipidemia-status`: Controlled (LDL<70) / Uncontrolled (LDL≥70) / Unknown (no LDL) |
+| `updateGFRLabels()` | demographics age change | Swaps labels between CKiD U25 (≤25 yr) and CKD-EPI (>25 yr) for GFR and G-stage rows |
+| `syncDiseaseOutcomeRows()` | pill add/remove in `#pill-box-complic` or `#pill-box-comorb` | Creates/removes per-item status rows in `<tbody id="disease-outcome-entries">` |
 
 ### Validation Constraints
 
@@ -248,7 +252,7 @@ Numeric fields validate on blur. Out-of-range values trigger a red border + inli
 | `row-metabolic-risk` | Waist has a value |
 | `row-urine-ketone` | FBS ≥ 250 or RBS ≥ 350 |
 | `row-urine-protein` | Albumin = 2+, 3+, or 4+ |
-| `row-gfr`, `row-gfr-kdigo` | Creatinine has a value (CKiD U25 also requires height for ≤25 yr) |
+| `row-gfr`, `row-gfr-kdigo` | Creatinine has a value. For ≤25 yr (CKiD U25), height is also required; otherwise shows prompt |
 | `row-dm-status` | FBS, RBS, or HgA1c has a value |
 | `row-htn-status` | SBP or DBP has a value |
 | `#disease-outcome-entries tr` | Created dynamically for each pill in `#pill-box-complic` and `#pill-box-comorb` |
@@ -465,7 +469,7 @@ The row is hidden by default and appears only when:
 - The **Dyslipidemia** textarea (`obs-dyslipidemia-copy`) in the Treatment (Active Plan) section is **empty**.
 - Patient age is **within 40–74 years** (otherwise the row is hidden and skipped entirely).
 
-When dyslipidemia-copy has a value, CVD Risk is hidden and the **Dyslipidemia** Disease Outcome row is shown instead (auto-computed from LDL).
+When dyslipidemia-copy has a value, or age is outside 40–74, the CVD Risk row is hidden and `autoCalculateDyslipidemiaStatus()` runs instead to show the **Dyslipidemia Disease Outcome** row (auto-computed from LDL).
 
 ### Inputs and Modes
 
@@ -554,6 +558,37 @@ The resulting eGFR is classified into the same G1–G5 stages as KDIGO, but labe
 
 - **Age ≤ 25**: Labels change to "Estimated GFR by CKiD U25 Creatinine" / "CKiD U25 Category". Height becomes required for GFR calculation.
 - **Age > 25**: Labels revert to "GFR(ml/min/1.73 m2)" / "KDIGO Category". Uses 2021 CKD-EPI equation (no height dependency).
+
+---
+
+## Dynamic Disease Outcome Rows
+
+When items are selected from **Complications** (`search-complic`) or **Comorbidity** (`search-comorb`) in the Diagnosis Categories section, each selected item automatically gets its own dedicated row in the Disease Outcome section with an individual status dropdown.
+
+### How it works
+
+`syncDiseaseOutcomeRows()` reconciles the pills in `#pill-box-complic` and `#pill-box-comorb` with rows inside `<tbody id="disease-outcome-entries">`:
+
+- **Adding** a pill → a new row appears with a colored badge (`Complication` in red / `Comorbidity` in blue), the item name, and a status select.
+- **Removing** a pill (via the × on the pill or the × on the row) → the corresponding row is removed.
+- **Status options**: `Same` / `Corrected` / `Controlled` / `Uncontrolled` / `Unknown`
+- All dynamic rows participate in the Save/Snapshot system.
+
+### Row identification
+
+Each dynamically generated select is assigned an ID:
+- `outcome-status-complic-{item_name}` for complication items
+- `outcome-status-comorb-{item_name}` for comorbidity items
+
+### Trigger events
+
+`syncDiseaseOutcomeRows()` runs on:
+- DOMContentLoaded (initial render)
+- Pill add (`addPill()` for `complic` or `comorb`)
+- Pill remove (via click handler)
+- `updateLifestyleButtons()`
+- `resetNowColumn()`
+- Snapshot restore (`restoreInputValue()`)
 
 ---
 
@@ -690,6 +725,9 @@ Do not use the standard Bahmni Form Builder for the complex calculation blocks. 
 - **Adult (≥13 yr)**: Normal < 140/90, Grade-1 ≥ 140/90, Grade-2 ≥ 160/100, Grade-3 ≥ 180/110, Hypotensive < 90/60.
 - **Pediatric (<13 yr)**: Uses 2017 AAP percentile-based classification with CDC height-for-age z-score. Categories: Normal (both < 90th %ile), Elevated (≥ 90th but < 95th %ile, or ≥ 120/80), Stage 1 HTN (≥ 95th %ile but < 95th+12, or 130/80–139/89), Stage 2 HTN (≥ 95th+12, or ≥ 140/90), Hypotensive (< estimated 5th %ile or age-based absolute minimum). Controlled = Normal/Elevated, Uncontrolled = Hypotensive/Stage 1/Stage 2.
 - **WAIST risk thresholds** (WHO): Male ≤ 94 cm normal, 94–102 increased, > 102 greatly increased. Female ≤ 80 cm normal, 80–88 increased, > 88 greatly increased.
+- **eGFR equation switching**: `autoCalculateGFR()` uses `updateGFRLabels()` to dynamically swap labels and equation. **Age ≤ 25:** CKiD U25 equation (`eGFR = k × height/cr`) with age/sex-specific k values; height is required. **Age > 25:** 2021 CKD-EPI equation (`142 × (cr/κ)^α × 0.9938^age × gender`); height not needed.
+- **CVD Risk age gate**: `calculateCVDRisk()` hides the CVD Risk row entirely when age is outside 40–74 (calls `autoCalculateDyslipidemiaStatus()` as fallback). The WHO 2019 lookup tables only support ages 40–74.
+- **Dynamic disease outcome rows**: `syncDiseaseOutcomeRows()` creates one status row per complication/comorbidity pill, each with its own select (Same/Corrected/Controlled/Uncontrolled/Unknown). Rows are removed when the corresponding pill is removed. Uses `<tbody id="disease-outcome-entries">` container.
 
 ---
 
