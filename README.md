@@ -1,6 +1,17 @@
 # DM & HTN Follow-up Form — Bahmni HTML Form Entry Prototype
 
-A standalone, mobile-responsive clinical follow-up form prototype for Diabetes Mellitus (DM) and Hypertension (HTN) patients, built as a plain HTML/CSS/JS single-page application. Designed for eventual conversion to a **Bahmni HTML Form Entry** template with OpenMRS concept mappings.
+<p align="center">
+  <img src="https://img.shields.io/badge/status-prototype-yellow" alt="Status">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License">
+  <img src="https://img.shields.io/badge/stack-HTML%20%7C%20CSS%20%7C%20ES6-green" alt="Stack">
+  <img src="https://img.shields.io/badge/EC-Ethiopian%20Calendar-orange" alt="Ethiopian Calendar">
+  <img src="https://img.shields.io/badge/Bahmni-EMR%20Ready-brightgreen" alt="Bahmni Ready">
+  <img src="https://img.shields.io/badge/WHO%202019-CVD%20Risk-important" alt="WHO CVD Risk">
+</p>
+
+A production-oriented, mobile-responsive clinical follow-up form for **Diabetes Mellitus (DM)** and **Hypertension (HTN)** patients — built as a standalone HTML/CSS/ES6 single-page application and engineered for direct conversion to a **Bahmni HTML Form Entry** template with full OpenMRS concept mappings.
+
+> **Target audience**: Clinical teams deploying into Bahmni EMR environments, health informaticians, and developers working on Ethiopian-standard DM/HTN follow-up workflows.
 
 ---
 
@@ -8,21 +19,21 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 
 1. [Architecture Overview](#architecture-overview)
 2. [Form Sections & Field Reference](#form-sections--field-reference)
-   - [Diagnosis Categories](#diagnosis-categories)
-   - [Treatment Given (Hidden / Copy-Only)](#treatment-given-hidden--copy-only)
-   - [Drug Adherence](#drug-adherence)
-   - [Subjective Section](#subjective-section)
-   - [Objective Section](#objective-section)
-   - [Pertinent Lab Ix](#pertinent-lab-ix)
-   - [Disease Outcome](#disease-outcome)
-   - [Treatment (Active Plan)](#treatment-active-plan)
-   - [Appointment](#appointment)
+    - [Diagnosis Categories](#diagnosis-categories)
+    - [Treatment Given (Hidden / Copy-Only)](#treatment-given-hidden--copy-only)
+    - [Drug Adherence](#drug-adherence)
+    - [Subjective Section](#subjective-section)
+    - [Objective Section](#objective-section)
+    - [Pertinent Lab Ix](#pertinent-lab-ix)
+    - [Disease Outcome](#disease-outcome)
+    - [Treatment (Active Plan)](#treatment-active-plan)
+    - [Appointment](#appointment)
 3. [Behavioral Rules](#behavioral-rules)
     - [Auto-Calculations](#auto-calculations)
     - [Validation Constraints](#validation-constraints)
     - [Conditional Visibility](#conditional-visibility)
     - [Risk-Linked Lifestyle Buttons](#risk-linked-lifestyle-buttons)
-   - [MMAS-4 Adherence Modal](#mmas-4-adherence-modal)
+    - [MMAS-4 Adherence Modal](#mmas-4-adherence-modal)
 4. [Save / Snapshot System](#save--snapshot-system)
 5. [Copy Last Observation](#copy-last-observation)
 6. [Reset (Add New)](#reset-add-new)
@@ -55,7 +66,7 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 ### Diagnosis Categories
 
 | Field ID | Type | Behavior |
-|---|---|---|---|
+|---|---|---|
 | `search-dm` | Autocomplete input | Single-select from `dictConcepts.dm`. Triggers `updateLifestyleButtons()` on change |
 | `search-htn` | Autocomplete input | Single-select from `dictConcepts.htn` |
 | `obs-htn-grade` | Read-only input | Auto-calculated from SBP/DBP values. Hidden row (`row-htn-grade`) shown only when BP entered |
@@ -106,7 +117,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 #### Vitals
 
 | Field ID | Type | Auto-Calculation |
-|---|---|---|---|
+|---|---|---|
 | `obs-sbp` | Integer input (text mode) | HTN Grade + HTN Status + Pediatric BP |
 | `obs-dbp` | Integer input (text mode) | HTN Grade + HTN Status + Pediatric BP |
 | `obs-pulse` | Integer input (text mode) | Pulse volume/rhythm row visibility |
@@ -152,7 +163,7 @@ Row `row-overall-adherence` is outside the hidden `#treatment-given-section` tbo
 ### Disease Outcome
 
 | Field ID | Type | Visibility |
-|---|---|---|---|
+|---|---|---|
 | `dm-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when FBS/RBS/HgA1c has data |
 | `htn-status` | Select (Controlled/Uncontrolled) | Hidden row, shown when SBP/DBP has data |
 | `obs-dyslipidemia-status` | Select (Controlled/Uncontrolled/Unknown) | Auto-computed from LDL when dyslipidemia-copy has entry. Hidden row, shown when dyslipidemia-copy has data |
@@ -190,7 +201,7 @@ This section contains the **current encounter treatment plan**. It is always vis
 ### Appointment
 
 | Field ID | Type | Behavior |
-|---|---|---|---|
+|---|---|---|
 | `obs-appointment` | Read-only (Ethiopian calendar) | Displays selected date in E.C. format |
 | `obs-appointment-gregorian` | Hidden | Gregorian backing-store for Bahmni's existing appointment scheduling concept; maps directly to the OpenMRS appointment date-time obs |
 | Picker | Custom calendar widget | Restricts to today + future dates only. Saturdays, Sundays, and Ethiopian full holidays are disabled |
@@ -203,6 +214,7 @@ This form integrates with Bahmni's pre-existing Appointment Scheduling module, w
 |---|---|
 | **Follow-up visit creation** | On form save, submit `obs-appointment-gregorian` to the OpenMRS appointment API to create or update a scheduled appointment for the patient. The field already aligns with Bahmni's existing `Visit Appointment` concept for out-of-the-box mapping |
 | **Automated reminders** | Bahmni's built-in SMS/notification service triggers automatically from the scheduled appointment date — no additional wiring required |
+| **Slot availability & quota enforcement** | Reads the configured `maxAppointmentsPerDate` from the Appointment Service concept. On date selection, queries Bahmni's appointment REST endpoint (`/rest/v1/appointment/all?forDate=...&serviceUuid=...`) to retrieve the current booking count; displays real-time availability (e.g., "3 of 10 slots booked" with a color-coded indicator). Prevents booking when the daily quota is exhausted and surfaces an inline warning: *"This appointment service has reached its daily capacity. Please select an alternative date."* |
 | **Bi-directional sync** | On form load, pre-populate `obs-appointment` from the patient's existing scheduled appointment (if any) via Bahmni's appointment REST endpoint; update on save keeps both sides in sync |
 | **Conflict detection** | Bahmni's scheduling engine inherently cross-references provider availability and existing appointments before committing |
 | **Calendar integration** | In production, replace the prototype's standalone Ethiopian picker with Bahmni's native `datepicker` directive, which already supports the Ethiopian calendar and the appointment scheduling context natively |
@@ -974,7 +986,7 @@ If a Custom Display Control is not immediately feasible, deploy using **Velocity
 
 #### 5.1 Appointment Scheduling Integration
 
-Wire `obs-appointment-gregorian` to the Bahmni Appointment Scheduling API:
+Wire `obs-appointment-gregorian` to the Bahmni Appointment Scheduling API, including **slot quota** validation against the configured `maxAppointmentsPerDate` on the Appointment Service concept:
 
 ```javascript
 // In your controller's save handler
@@ -982,19 +994,39 @@ function onFormSave() {
     var appointmentDate = $scope.observations.get('obs-appointment-gregorian');
     if (!appointmentDate) return;
 
-    Bahmni.Appointments.create({
-        patientUuid: $scope.patient.uuid,
-        providerUuid: $scope.session.currentProvider.uuid,
-        serviceUuid: 'DM/HTN Follow-up Service UUID',
-        startDateTime: appointmentDate,
-        endDateTime: moment(appointmentDate).add(30, 'minutes').toISOString(),
-        appointmentKind: 'FollowUp',
-        notes: 'DM/HTN scheduled follow-up'
-    }).then(function(response) {
-        // Update obs-appointment with the appointment UUID for cross-reference
+    // --- Slot quota check ---
+    var serviceUuid = 'DM/HTN Follow-up Service UUID';
+    Bahmni.Appointments.getAllAppointments({
+        forDate: appointmentDate,
+        serviceUuid: serviceUuid
+    }).then(function(existingAppointments) {
+        var maxQuota = appointmentService.maxAppointmentsPerDate || 10;  // fallback
+        var bookedCount = existingAppointments.results.length;
+        if (bookedCount >= maxQuota) {
+            $scope.showQuotaWarning = true;
+            $scope.quotaMessage = 'Service fully booked (' + bookedCount +
+                '/' + maxQuota + '). Please select another date.';
+            return;
+        }
+        $scope.showQuotaWarning = false;
+
+        // --- Proceed with booking ---
+        Bahmni.Appointments.create({
+            patientUuid: $scope.patient.uuid,
+            providerUuid: $scope.session.currentProvider.uuid,
+            serviceUuid: serviceUuid,
+            startDateTime: appointmentDate,
+            endDateTime: moment(appointmentDate).add(30, 'minutes').toISOString(),
+            appointmentKind: 'FollowUp',
+            notes: 'DM/HTN scheduled follow-up'
+        }).then(function(response) {
+            // Update obs-appointment with the appointment UUID for cross-reference
+        });
     });
 }
 ```
+
+The prototype's hidden `obs-appointment-gregorian` field serves as the canonical date source — no additional user input required beyond the Ethiopian calendar picker.
 
 #### 5.2 MMAS-4 Adherence as Structured Observations
 
@@ -1058,6 +1090,8 @@ Validate each feature by running identical inputs against both the prototype (op
 | MMAS-4 | Yes + 4 answers | Adherence = "Poor" |
 | Copy Last Observation | Save → modify → Copy | Fields restored (skip list respected) |
 | Appointment | Select Ethiopian date | Gregorian hidden value synced |
+| Appointment — quota | Book to capacity on a given date | Warning shown: "Service fully booked"; booking blocked |
+| Appointment — quota | Select date with available slots | Date accepted; no quota warning |
 | Reset | Click Add New | All fields cleared |
 
 ---
@@ -1070,6 +1104,7 @@ Validate each feature by running identical inputs against both the prototype (op
 - [ ] `form-conditions.js` deployed with statin + dyslipidemia rules
 - [ ] Custom Display Control manifest (`.json`) and controller deployed
 - [ ] Appointment scheduling API integration tested end-to-end
+- [ ] Slot quota enforcement verified — `maxAppointmentsPerDate` read correctly from Appointment Service concept; quota-exceeded warning displays and blocks booking
 - [ ] MMAS-4 hidden observation concepts created
 - [ ] Obs group concepts created for multi-select fields
 - [ ] All 14 test cases from Phase 6 pass against prototype
