@@ -1,6 +1,16 @@
-# DM & HTN Follow-up Form — Bahmni HTML Form Entry Prototype
+# DM & HTN Follow-up Form
 
-A standalone, mobile-responsive clinical follow-up form prototype for Diabetes Mellitus (DM) and Hypertension (HTN) patients, built as a plain HTML/CSS/JS single-page application. Designed for eventual conversion to a **Bahmni HTML Form Entry** template with OpenMRS concept mappings.
+> Bahmni HTML Form Entry Prototype — Diabetes Mellitus & Hypertension Clinical Follow-up
+
+<p align="center">
+  <img alt="Static Badge" src="https://img.shields.io/badge/status-prototype-yellow?style=flat-square">
+  <img alt="Static Badge" src="https://img.shields.io/badge/stack-vanilla_JS-blue?style=flat-square">
+  <img alt="Static Badge" src="https://img.shields.io/badge/single_file-~4130_lines-blue?style=flat-square">
+  <img alt="Static Badge" src="https://img.shields.io/badge/mobile_responsive-yes-brightgreen?style=flat-square">
+  <img alt="Static Badge" src="https://img.shields.io/badge/license-MIT-green?style=flat-square">
+</p>
+
+A standalone, mobile-responsive clinical follow-up form for **Diabetes Mellitus (DM)** and **Hypertension (HTN)** patients, built as a pure HTML/CSS/JS single-page application. Designed for eventual conversion to a **Bahmni HTML Form Entry** template with OpenMRS concept mappings.
 
 ---
 
@@ -18,9 +28,9 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
    - [Treatment (Active Plan)](#treatment-active-plan)
    - [Appointment](#appointment)
 3. [Behavioral Rules](#behavioral-rules)
-    - [Auto-Calculations](#auto-calculations)
-    - [Validation Constraints](#validation-constraints)
-    - [Conditional Visibility](#conditional-visibility)
+   - [Auto-Calculations](#auto-calculations)
+   - [Validation Constraints](#validation-constraints)
+   - [Conditional Visibility](#conditional-visibility)
    - [Risk-Linked Lifestyle Buttons](#risk-linked-lifestyle-buttons)
    - [MMAS-4 Adherence Modal](#mmas-4-adherence-modal)
 4. [Save / Snapshot System](#save--snapshot-system)
@@ -31,7 +41,9 @@ A standalone, mobile-responsive clinical follow-up form prototype for Diabetes M
 9. [Pediatric BP Classification (AAP 2017)](#pediatric-bp-classification-aap-2017)
 10. [Hypotensive Detection](#hypotensive-detection)
 11. [CVD Risk (WHO 2019 revised)](#cvd-risk-who-2019-revised)
-12. [Estimated GFR — CKiD U25 (Age ≤ 25)](#estimated-gfr--ckid-u25-age--25)
+12. [Estimated GFR](#estimated-gfr)
+    - [CKiD U25 Creatinine (Age ≤ 25)](#ckid-u25-creatinine-age--25)
+    - [2021 CKD-EPI Creatinine (Age > 25)](#2021-ckid-epi-creatinine-age--25)
 13. [Dynamic Disease Outcome Rows](#dynamic-disease-outcome-rows)
 14. [Mobile Responsiveness](#mobile-responsiveness)
 15. [Integration Guide for Bahmni EMR](#integration-guide-for-bahmni-emr)
@@ -469,6 +481,9 @@ The row is hidden by default and appears only when:
 - The **Dyslipidemia** textarea (`obs-dyslipidemia-copy`) in the Treatment (Active Plan) section is **empty**.
 - Patient age is **within 40–74 years** (otherwise the row is hidden and skipped entirely).
 
+> [!TIP]
+> Use the **Test Demographics** section (Age input + Sex toggle) at the top of the form to test adult (40–74) vs. out-of-range scenarios without reloading the page.
+
 When dyslipidemia-copy has a value, or age is outside 40–74, the CVD Risk row is hidden and `autoCalculateDyslipidemiaStatus()` runs instead to show the **Dyslipidemia Disease Outcome** row (auto-computed from LDL).
 
 ### Inputs and Modes
@@ -523,11 +538,18 @@ Additionally, `autoCalculateDyslipidemiaStatus()` runs directly on `obs-ldl` cha
 
 ---
 
-## Estimated GFR — CKiD U25 (Age ≤ 25)
+## Estimated GFR
 
-For patients aged **25 years and under**, the form uses the **CKiD U25 creatinine eGFR equation** (Pierce et al., 2021) instead of the standard 2021 CKD-EPI equation.
+The form automatically selects the appropriate eGFR equation based on patient age — no manual switching required.
 
-### Equation
+### CKiD U25 Creatinine (Age ≤ 25)
+
+For patients aged **25 years and under**, the form uses the **CKiD U25 creatinine eGFR equation** (Pierce et al., 2021).
+
+> [!NOTE]
+> CKiD U25 is recommended by the NKF for pediatric and young adult populations. The traditional CKD-EPI equation significantly overestimates GFR in this group.
+
+#### Equation
 
 ```
 eGFR = k × (height(m) / sCr(mg/dL))
@@ -541,23 +563,66 @@ Where **k** is age- and sex-dependent:
 | 12 to <18 years | `39.0 × 1.045^(age−12)` | `36.1 × 1.023^(age−12)` |
 | 18 to 25 years | 50.8 | 41.4 |
 
-### Inputs
+#### Inputs
 
 | Input | Source |
 |-------|--------|
 | Scr (serum creatinine) | `obs-creatinine` (mg/dL) |
-| Age | `patientDemographics.age` (from Test Demographics) |
+| Age | `patientDemographics.age` |
 | Sex | `patientDemographics.gender` |
-| Height | `obs-height` (cm) — **required** for CKiD U25 |
+| Height | `obs-height` (cm) — **required** |
 
-### Staging
+### 2021 CKD-EPI Creatinine (Age > 25)
 
-The resulting eGFR is classified into the same G1–G5 stages as KDIGO, but labeled under **CKiD U25 Category** when age ≤ 25.
+For patients aged **over 25 years**, the form uses the **2021 CKD-EPI Creatinine equation** (NKF/ASN Task Force), the current clinical standard for adults.
 
-### Switching
+#### Equation
 
-- **Age ≤ 25**: Labels change to "Estimated GFR by CKiD U25 Creatinine" / "CKiD U25 Category". Height becomes required for GFR calculation.
-- **Age > 25**: Labels revert to "GFR(ml/min/1.73 m2)" / "KDIGO Category". Uses 2021 CKD-EPI equation (no height dependency).
+```
+eGFR = 142 × (Scr / A)^B × 0.9938^age × (1.012 if female)
+```
+
+Where **A** and **B** are sex-dependent:
+
+| Sex | Scr ≤ A | Scr > A |
+|-----|---------|---------|
+| **Female** | A = 0.7, B = −0.241 | A = 0.7, B = −1.200 |
+| **Male**   | A = 0.9, B = −0.302 | A = 0.9, B = −1.200 |
+
+If the patient is female, the result is multiplied by **1.012**.
+
+> [!NOTE]
+> This is the **race-free** 2021 equation (no coefficient for Black / non-Black). It supercedes the 2009 MDRD and 2012 CKD-EPI equations.
+
+#### Inputs
+
+| Input | Source |
+|-------|--------|
+| Scr (serum creatinine) | `obs-creatinine` (mg/dL) |
+| Age | `patientDemographics.age` |
+| Sex | `patientDemographics.gender` |
+
+No height input needed — GFR is normalized to 1.73 m² BSA.
+
+### Staging (Both Equations)
+
+The resulting eGFR is classified into KDIGO G-categories:
+
+| Stage | eGFR (mL/min/1.73 m²) | Color |
+|-------|------------------------|-------|
+| **G1** | ≥ 90 | Green |
+| **G2** | 60–89 | Light Green |
+| **G3a** | 45–59 | Yellow |
+| **G3b** | 30–44 | Orange |
+| **G4** | 15–29 | Red |
+| **G5** | < 15 | Dark Red |
+
+### Automatic Switching
+
+| Condition | Equation Used | GFR Label | Stage Label | Height Dependency |
+|-----------|---------------|-----------|-------------|-------------------|
+| Age ≤ 25 | CKiD U25 | *Estimated GFR by CKiD U25 Creatinine* | *CKiD U25 Category* | Required |
+| Age > 25 | 2021 CKD-EPI | *GFR(ml/min/1.73 m2)* | *KDIGO Category* | Not needed |
 
 ---
 
@@ -725,10 +790,20 @@ Do not use the standard Bahmni Form Builder for the complex calculation blocks. 
 - **Adult (≥13 yr)**: Normal < 140/90, Grade-1 ≥ 140/90, Grade-2 ≥ 160/100, Grade-3 ≥ 180/110, Hypotensive < 90/60.
 - **Pediatric (<13 yr)**: Uses 2017 AAP percentile-based classification with CDC height-for-age z-score. Categories: Normal (both < 90th %ile), Elevated (≥ 90th but < 95th %ile, or ≥ 120/80), Stage 1 HTN (≥ 95th %ile but < 95th+12, or 130/80–139/89), Stage 2 HTN (≥ 95th+12, or ≥ 140/90), Hypotensive (< estimated 5th %ile or age-based absolute minimum). Controlled = Normal/Elevated, Uncontrolled = Hypotensive/Stage 1/Stage 2.
 - **WAIST risk thresholds** (WHO): Male ≤ 94 cm normal, 94–102 increased, > 102 greatly increased. Female ≤ 80 cm normal, 80–88 increased, > 88 greatly increased.
-- **eGFR equation switching**: `autoCalculateGFR()` uses `updateGFRLabels()` to dynamically swap labels and equation. **Age ≤ 25:** CKiD U25 equation (`eGFR = k × height/cr`) with age/sex-specific k values; height is required. **Age > 25:** 2021 CKD-EPI equation (`142 × (cr/κ)^α × 0.9938^age × gender`); height not needed.
+- **eGFR equation switching**: `autoCalculateGFR()` uses `updateGFRLabels()` to dynamically swap labels and equation (see [Estimated GFR](#estimated-gfr)). **Age ≤ 25:** CKiD U25 equation (`eGFR = k × height/cr`) with age/sex-specific k values; height is required. **Age > 25:** 2021 CKD-EPI equation (`142 × (Scr/A)^B × 0.9938^age × gender`); height not needed.
 - **CVD Risk age gate**: `calculateCVDRisk()` hides the CVD Risk row entirely when age is outside 40–74 (calls `autoCalculateDyslipidemiaStatus()` as fallback). The WHO 2019 lookup tables only support ages 40–74.
 - **Dynamic disease outcome rows**: `syncDiseaseOutcomeRows()` creates one status row per complication/comorbidity pill, each with its own select (Same/Corrected/Controlled/Uncontrolled/Unknown). Rows are removed when the corresponding pill is removed. Uses `<tbody id="disease-outcome-entries">` container.
 
 ---
 
-*Maintained by Dr Teselonke K. Prototype for Bahmni HTML Form Entry conversion.*
+## License
+
+This project is provided as a reference prototype for Bahmni HTML Form Entry implementations. No formal license is applied — use and adapt freely for clinical and educational purposes.
+
+---
+
+<p align="center">
+  <sub>Maintained by <strong>Dr. Teselonke K.</strong> — Prototype for Bahmni HTML Form Entry conversion.</sub>
+  <br>
+  <sub>Built with vanilla HTML, CSS & JavaScript — no frameworks, no build tools, no dependencies.</sub>
+</p>
