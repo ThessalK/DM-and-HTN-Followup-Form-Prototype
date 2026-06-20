@@ -205,8 +205,8 @@ This section contains the **current encounter treatment plan**. It is always vis
 
 | Field ID | Type | Behavior |
 |---|---|---|
-| `obs-appointment` | Read-only (Ethiopian calendar) | Displays selected date in E.C. format |
-| `obs-appointment-gregorian` | Hidden | Stores Gregorian equivalent for Bahmni |
+| `obs-appointment` | Read-only (Ethiopian calendar — Quota Based Appointment Concept) | Displays selected date in E.C. format |
+| `obs-appointment-gregorian` | Hidden | Stores Gregorian equivalent for Bahmni interoperability |
 | Picker | Custom calendar widget | Restricts to today + future dates only. Saturdays, Sundays, and Ethiopian full holidays are disabled |
 
 ---
@@ -783,8 +783,8 @@ Each field ID maps to an OpenMRS concept. Fields are organized by form section. 
 | `obs-referral-to` | Referral To | Text |
 | `obs-referral-reason` | Referral Reason | Text |
 | `obs-remark` | Remark | Text |
-| `obs-appointment` | Appointment Date (Ethiopian Calendar) | Date |
-| `obs-appointment-gregorian` | Appointment Date (Gregorian, hidden) | Date |
+| `obs-appointment` | Appointment Date — Quota Based Appointment Concept (Ethiopian Calendar) | Date |
+| `obs-appointment-gregorian` | Appointment Date (Gregorian, hidden — for EMR interoperability) | Date |
 
 ### Simplified Integration Path (For Bahmni Beginners)
 
