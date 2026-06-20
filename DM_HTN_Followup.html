@@ -920,6 +920,80 @@
             display: block;
             margin-top: 2px;
         }
+
+        .disease-outcome-row .status-select {
+            width: 200px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 13px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .disease-outcome-row .icon-btn {
+            position: static;
+            display: inline-flex;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .disease-outcome-row .label-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .disease-outcome-row .label-cell .item-type-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 3px;
+            color: #fff;
+            margin-right: 4px;
+        }
+
+        .item-type-badge.complic {
+            background: #d9534f;
+        }
+
+        .item-type-badge.comorb {
+            background: #5bc0de;
+        }
+
+        .disease-outcome-row .remove-outcome-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            background: #fff;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #d9534f;
+            line-height: 1;
+            margin-left: 6px;
+            transition: background 0.15s;
+        }
+
+        .disease-outcome-row .remove-outcome-btn:hover {
+            background: #fbeaea;
+            border-color: #d9534f;
+        }
+
+        .disease-outcome-row.status-row-enter {
+            animation: fadeSlideIn 0.25s ease-out;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 
@@ -1599,36 +1673,7 @@
                             <div class="icon-btn" title="Add notes"></div>
                         </td>
                     </tr>
-                    <tr id="row-complic-status" style="display: none;">
-                        <td class="label-cell">Complication Status</td>
-                        <td class="input-cell">
-                            <select id="obs-complic-status"
-                                style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
-                                <option value=""></option>
-                                <option value="Same">Same</option>
-                                <option value="Corrected">Corrected</option>
-                                <option value="Controlled">Controlled</option>
-                                <option value="Uncontrolled">Uncontrolled</option>
-                                <option value="Unknown">Unknown</option>
-                            </select>
-                            <div class="icon-btn" title="Add notes"></div>
-                        </td>
-                    </tr>
-                    <tr id="row-comorb-status" style="display: none;">
-                        <td class="label-cell">Comorbidity Status</td>
-                        <td class="input-cell">
-                            <select id="obs-comorb-status"
-                                style="width: 200px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit;">
-                                <option value=""></option>
-                                <option value="Same">Same</option>
-                                <option value="Corrected">Corrected</option>
-                                <option value="Controlled">Controlled</option>
-                                <option value="Uncontrolled">Uncontrolled</option>
-                                <option value="Unknown">Unknown</option>
-                            </select>
-                            <div class="icon-btn" title="Add notes"></div>
-                        </td>
-                    </tr>
+                    <tbody id="disease-outcome-entries"></tbody>
                     <!-- Treatment Section (copy) -->
                     <tr class="table-header" style="background:#ddd;">
                         <td colspan="2">Treatment</td>
@@ -1798,7 +1843,7 @@
             if (patientDemographics.age >= 20) {
                 document.getElementById('row-waist-entry').style.display = 'table-row';
             }
-            updateComorbStatusVisibility();
+            syncDiseaseOutcomeRows();
             toggleEntryLinkedRow('obs-linked-to', 'row-linkage-note', 'obs-linkage-note');
             toggleEntryLinkedRow('obs-consultation-to', 'row-consultation-note', 'obs-consultation-note');
             toggleEntryLinkedRow('obs-referral-to', 'row-referral-reason', 'obs-referral-reason');
@@ -1956,13 +2001,20 @@
             const pill = document.createElement('div');
             pill.className = 'pill';
             pill.dataset.val = value;
-            pill.innerHTML = `
-                ${value} 
-                <span class="remove-pill" onclick="this.parentElement.remove(); updateLifestyleButtons()">×</span>
-            `;
+            pill.innerHTML = value + ' <span class="remove-pill">\u00d7</span>';
+            pill.querySelector('.remove-pill').addEventListener('click', function () {
+                var isComplicOrComorb = (containerId === 'pill-box-complic' || containerId === 'pill-box-comorb');
+                pill.remove();
+                if (isComplicOrComorb) syncDiseaseOutcomeRows();
+                updateLifestyleButtons();
+            });
             container.appendChild(pill);
 
-            if (containerId === 'pill-box-risks' || containerId === 'pill-box-comorb' || containerId === 'pill-box-complic') {
+            if (containerId === 'pill-box-risks') {
+                updateLifestyleButtons();
+            }
+            if (containerId === 'pill-box-comorb' || containerId === 'pill-box-complic') {
+                syncDiseaseOutcomeRows();
                 updateLifestyleButtons();
             }
         }
@@ -2716,6 +2768,7 @@
             var concInput = document.getElementById('obs-conceive');
             if (concInput) concInput.value = '';
 
+            syncDiseaseOutcomeRows();
             updateLifestyleButtons();
         }
 
@@ -2723,13 +2776,20 @@
             const pillContainer = inputCell.querySelector('.pill-container');
 
             if (pillContainer) {
+                var containerId = pillContainer.id;
                 pillContainer.innerHTML = '';
                 const items = value.split(',').map(s => s.trim()).filter(Boolean);
                 items.forEach(item => {
                     const pill = document.createElement('div');
                     pill.className = 'pill';
                     pill.dataset.val = item;
-                    pill.innerHTML = item + ' <span class="remove-pill" onclick="this.parentElement.remove(); updateLifestyleButtons()">\u00d7</span>';
+                    pill.innerHTML = item + ' <span class="remove-pill">\u00d7</span>';
+                    pill.querySelector('.remove-pill').addEventListener('click', function () {
+                        var isComplicOrComorb = (containerId === 'pill-box-complic' || containerId === 'pill-box-comorb');
+                        pill.remove();
+                        if (isComplicOrComorb) syncDiseaseOutcomeRows();
+                        updateLifestyleButtons();
+                    });
                     pillContainer.appendChild(pill);
                 });
                 return;
@@ -3095,22 +3155,99 @@
             }
         }
 
-        // Show/Hide lifestyle buttons based on selected risk factor pills, BMI, and adherence
-        function updateComorbStatusVisibility() {
-            var rowComorb = document.getElementById('row-comorb-status');
-            var selectComorb = document.getElementById('obs-comorb-status');
-            var hasComorb = document.querySelectorAll('#pill-box-comorb .pill').length > 0;
-            if (rowComorb) {
-                rowComorb.style.display = hasComorb ? 'table-row' : 'none';
-                if (!hasComorb && selectComorb) selectComorb.value = '';
+        function syncDiseaseOutcomeRows() {
+            var container = document.getElementById('disease-outcome-entries');
+            if (!container) return;
+
+            var complicPills = document.querySelectorAll('#pill-box-complic .pill');
+            var comorbPills = document.querySelectorAll('#pill-box-comorb .pill');
+            var existingRows = container.querySelectorAll('tr.disease-outcome-row');
+            var usedKeys = {};
+
+            function addRow(itemName, type) {
+                var key = type + '::' + itemName;
+                usedKeys[key] = true;
+
+                var existing = container.querySelector('tr.disease-outcome-row[data-key="' + key.replace(/"/g, '&quot;') + '"]');
+                if (existing) return existing;
+
+                var row = document.createElement('tr');
+                row.className = 'disease-outcome-row status-row-enter';
+                row.dataset.key = key;
+
+                var labelCell = document.createElement('td');
+                labelCell.className = 'label-cell';
+
+                var badge = document.createElement('span');
+                badge.className = 'item-type-badge ' + type;
+                badge.textContent = type === 'complic' ? 'Complication' : 'Comorbidity';
+                labelCell.appendChild(badge);
+
+                var nameSpan = document.createElement('span');
+                nameSpan.textContent = itemName;
+                labelCell.appendChild(nameSpan);
+
+                var removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'remove-outcome-btn';
+                removeBtn.title = 'Remove item';
+                removeBtn.innerHTML = '\u00d7';
+                removeBtn.onclick = function () {
+                    var pillContainer = document.getElementById('pill-box-' + type);
+                    if (pillContainer) {
+                        var pills = pillContainer.querySelectorAll('.pill');
+                        for (var i = 0; i < pills.length; i++) {
+                            if (pills[i].dataset.val === itemName) {
+                                pills[i].remove();
+                                break;
+                            }
+                        }
+                    }
+                    updateLifestyleButtons();
+                    syncDiseaseOutcomeRows();
+                };
+                labelCell.appendChild(removeBtn);
+
+                row.appendChild(labelCell);
+
+                var inputCell = document.createElement('td');
+                inputCell.className = 'input-cell';
+
+                var select = document.createElement('select');
+                select.className = 'status-select';
+                select.id = 'outcome-status-' + type + '-' + itemName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                var options = ['', 'Same', 'Corrected', 'Controlled', 'Uncontrolled', 'Unknown'];
+                for (var i = 0; i < options.length; i++) {
+                    var opt = document.createElement('option');
+                    opt.value = options[i];
+                    opt.textContent = options[i];
+                    select.appendChild(opt);
+                }
+                inputCell.appendChild(select);
+
+                var noteBtn = document.createElement('div');
+                noteBtn.className = 'icon-btn';
+                noteBtn.title = 'Add notes';
+                inputCell.appendChild(noteBtn);
+
+                row.appendChild(inputCell);
+
+                container.appendChild(row);
+                return row;
             }
 
-            var rowComplic = document.getElementById('row-complic-status');
-            var selectComplic = document.getElementById('obs-complic-status');
-            var hasComplic = document.querySelectorAll('#pill-box-complic .pill').length > 0;
-            if (rowComplic) {
-                rowComplic.style.display = hasComplic ? 'table-row' : 'none';
-                if (!hasComplic && selectComplic) selectComplic.value = '';
+            for (var i = 0; i < complicPills.length; i++) {
+                addRow(complicPills[i].dataset.val, 'complic');
+            }
+            for (var i = 0; i < comorbPills.length; i++) {
+                addRow(comorbPills[i].dataset.val, 'comorb');
+            }
+
+            for (var i = existingRows.length - 1; i >= 0; i--) {
+                var existingKey = existingRows[i].dataset.key;
+                if (!usedKeys[existingKey]) {
+                    existingRows[i].remove();
+                }
             }
         }
 
@@ -3355,7 +3492,7 @@
         }
 
         function updateLifestyleButtons() {
-            updateComorbStatusVisibility();
+            syncDiseaseOutcomeRows();
             calculateCVDRisk();
 
             const pills = document.querySelectorAll('#pill-box-risks .pill');
